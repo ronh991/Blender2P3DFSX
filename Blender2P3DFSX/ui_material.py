@@ -125,6 +125,32 @@ class FSXMaterial(bpy.types.Panel):
                 if mat.fsxm_material_mode == 'PBR':
                     subbox = box.box()
                     subbox.label(text="PBR material only for P3D v4.4 and up.", icon='ERROR')
+                    subbox = box.box()
+                    subbox.label(text="Base Color", icon='TEXTURE')
+                    subbox.prop(mat, 'fsxm_BaseColor')
+                    subbox.prop(mat, 'fsxm_metallic_scale')
+                    subbox.prop(mat, 'fsxm_smoothness_scale')
+                    subbox = box.box()
+                elif mat.fsxm_material_mode == 'FSX':
+                    subbox = box.box()
+                    subbox.label(text="Diffuse Color", icon='TEXTURE')
+                    subbox.prop(mat, 'fsxm_DiffuseColor')
+                    subbox.label(text="Specular Color", icon='TEXTURE')
+                    subbox.prop(mat, 'fsxm_SpecularColor')
+                    subbox.prop(mat, 'fsxm_power_scale')
+                    subbox = box.box()
+                    subbox.label(text="Emissive Color", icon='TEXTURE') # no PBR emissive  ... yet?
+                    subbox.prop(mat, 'fsxm_EmissiveColor')
+
+                # ToDo: PBR and Specular base color - Albedo (PBR) and Diffuse(Spec FallbackDiffuse) - PBR/SPECULAR
+
+                # ToDo: Metallic and Smoothness - PBR
+
+                # ToDo: Emissive Color nodes - PBR/SPECULAR
+
+                # ToDo - Done: Specular Power(has this already below - specscale), DetailScale(detailscale), BumpScale (bumpscale), EnvironmentLevelScale(refscale) - SPECULAR
+
+
                 # Textures              # 28-02-2023 Rearranged to match nodes row order     Dave_W
                 subbox = box.box()
                 subbox.label(text="Textures", icon='TEXTURE')
@@ -153,6 +179,11 @@ class FSXMaterial(bpy.types.Panel):
                 if ((mat.fsxm_material_mode == 'PBR' and context.scene.global_sdk == 'p3dv5') or (mat.fsxm_material_mode == 'PBR' and context.scene.global_sdk == 'p3dv6')):             # Dave_W
                     subbox.label(text="Clearcoat:")
                     subbox.template_ID(mat, "fsxm_clearcoattexture", new="image.new", open="image.open")
+
+                # ToDo: add this for real for v6
+                # if ((mat.fsxm_material_mode == 'PBR' and context.scene.global_sdk == 'p3dv6')):             # RonH
+                    # subbox.label(text="Precipitation:")
+                    # subbox.template_ID(mat, "fsxm_precipitationtexture", new="image.new", open="image.open")
 
             if mat.fsxm_material_mode == 'PBR':
                 subbox = box.box()
@@ -325,6 +356,7 @@ class FSXMaterial(bpy.types.Panel):
                 subbox.prop(mat, 'fsxm_globenv')
                 subbox.label(text="Custom environment map:")
                 subbox.template_ID(mat, "fsxm_environmentmap", new="image.new", open="image.open")
+                # ToDo: Environmentmapscale - already refscale (Reflection Scale in P3D SDK) - SPECULAR
 
                 subbox = box.box()
                 subbox.label(text="Aircraft Material Params", icon='FORCE_WIND')

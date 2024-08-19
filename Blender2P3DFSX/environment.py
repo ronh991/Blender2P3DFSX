@@ -73,19 +73,260 @@ from . func_scenery import *
 
 class Environment():
 
-    # Use this function to  the blender-native material settings
+    # Use this function to the blender-native material settings
     def switch_material(self, context):
         # TODO confirmation needed here! No idea how... ON
         # bpy.ops.ui.msgbox('INVOKE_DEFAULT')
 
         mat = context.active_object.active_material
+        def set_material_properties(self, context):
+            print("set material")
+            mat = context.active_object.active_material
+            # force an update to populate shader nodes
+            mat.fsxm_BaseColor = mat.fsxm_BaseColor
+            mat.fsxm_DiffuseColor = mat.fsxm_DiffuseColor
+            mat.fsxm_SpecularColor = mat.fsxm_SpecularColor
+            mat.fsxm_EmissiveColor = mat.fsxm_EmissiveColor
+            mat.fsxm_metallic_scale = mat.fsxm_metallic_scale
+            mat.fsxm_smoothness_scale = mat.fsxm_smoothness_scale
+            mat.fsxm_power_scale = mat.fsxm_power_scale
+
+            # Textures
+            mat.fsxm_diffusetexture = mat.fsxm_diffusetexture
+            mat.fsxm_metallictexture = mat.fsxm_metallictexture
+            mat.fsxm_speculartexture = mat.fsxm_speculartexture
+            mat.fsxm_bumptexture = mat.fsxm_bumptexture
+            mat.fsxm_detailtexture = mat.fsxm_detailtexture
+            mat.fsxm_emissivetexture = mat.fsxm_emissivetexture
+            mat.fsxm_fresnelramp = mat.fsxm_fresnelramp
+            mat.fsxm_clearcoattexture = mat.fsxm_clearcoattexture
+
+            # mat Properties
+            mat.fsxm_rendermode = mat.fsxm_rendermode
+            mat.fsxm_metallicsource = mat.fsxm_metallicsource
+            mat.fsxm_metallichasocclusion = mat.fsxm_metallichasocclusion
+            mat.fsxm_metallichasreflection = mat.fsxm_metallichasreflection
+            mat.fsxm_maskedthreshold = mat.fsxm_maskedthreshold
+            mat.fsxm_alphatocoverage = mat.fsxm_alphatocoverage
+            mat.fsxm_decalorder = mat.fsxm_decalorder
+            mat.fsxm_clearcoatcontainsnormals = mat.fsxm_clearcoatcontainsnormals
+
+            mat.fsxm_ztest = mat.fsxm_ztest
+            mat.fsxm_ztestmode = mat.fsxm_ztestmode
+            mat.fsxm_ztestlevel = mat.fsxm_ztestlevel
+
+            mat.fsxm_allowbloom = mat.fsxm_allowbloom
+            mat.fsxm_emissivebloom = mat.fsxm_emissivebloom
+            mat.fsxm_ambientlightscale = mat.fsxm_ambientlightscale
+            mat.fsxm_bloommaterialcopy = mat.fsxm_bloommaterialcopy
+            mat.fsxm_bloommaterialmodulatingalpha = mat.fsxm_bloommaterialmodulatingalpha
+            mat.fsxm_nospecbloom = mat.fsxm_nospecbloom
+            mat.fsxm_bloomfloor = mat.fsxm_bloomfloor
+
+            mat.fsxm_emissivemode = mat.fsxm_emissivemode
+            mat.fsxm_emissivemode_pbr = mat.fsxm_emissivemode_pbr
+
+            mat.fsxm_assumevertical = mat.fsxm_assumevertical
+            mat.fsxm_blendconst = mat.fsxm_blendconst
+            mat.fsxm_doublesided = mat.fsxm_doublesided
+            mat.fsxm_forceclamp = mat.fsxm_forceclamp
+            mat.fsxm_forcewrap = mat.fsxm_forcewrap
+            mat.fsxm_nobasespec = mat.fsxm_nobasespec
+            mat.fsxm_noshadow = mat.fsxm_noshadow
+            mat.fsxm_nozwrite = mat.fsxm_nozwrite
+            mat.fsxm_pverts = mat.fsxm_pverts
+            mat.fsxm_skinned = mat.fsxm_skinned
+            mat.fsxm_zwrite = mat.fsxm_zwrite
+            mat.fsxm_vshadow = mat.fsxm_vshadow
+
+            mat.fsxm_zbias = mat.fsxm_zbias
+
+            mat.fsxm_falphamult = mat.fsxm_falphamult
+            mat.fsxm_falpha = mat.fsxm_falpha
+
+            mat.fsxm_srcblend = mat.fsxm_srcblend
+            mat.fsxm_destblend = mat.fsxm_destblend
+
+            mat.fsxm_fresdif = mat.fsxm_fresdif
+            mat.fsxm_fresref = mat.fsxm_fresref
+            mat.fsxm_fresspec = mat.fsxm_fresspec
+
+            mat.fsxm_detailscale = mat.fsxm_detailscale
+            mat.fsxm_bumpscale = mat.fsxm_bumpscale
+
+            mat.fsxm_precip1 = mat.fsxm_precip1
+            mat.fsxm_precip2 = mat.fsxm_precip2
+            mat.fsxm_precipoffs = mat.fsxm_precipoffs
+
+            mat.fsxm_blddif = mat.fsxm_blddif
+            mat.fsxm_bldspec = mat.fsxm_bldspec
+            mat.fsxm_bledif = mat.fsxm_bledif
+            mat.fsxm_blespec = mat.fsxm_blespec
+            mat.fsxm_refscale = mat.fsxm_refscale
+            mat.fsxm_specscale = mat.fsxm_specscale
+            mat.fsxm_globenv = mat.fsxm_globenv
+            mat.fsxm_environmentmap = mat.fsxm_environmentmap
+
+            # for PBR mat. ON
+            mat.fsxm_normal_scale_x = mat.fsxm_normal_scale_x
+            mat.fsxm_normal_scale_y = mat.fsxm_normal_scale_y
+            mat.fsxm_detail_scale_x = mat.fsxm_detail_scale_x
+            mat.fsxm_detail_scale_y = mat.fsxm_detail_scale_y
+
+            mat.fsxm_BumpTextureUVChannel = mat.fsxm_BumpTextureUVChannel
+            mat.fsxm_DetailBlendMode = mat.fsxm_DetailBlendMode
+            mat.fsxm_DetailBlendWeight = mat.fsxm_DetailBlendWeight
+            mat.fsxm_DetailColor = mat.fsxm_DetailColor
+            mat.fsxm_DetailOffsetU = mat.fsxm_DetailOffsetU
+            mat.fsxm_DetailOffsetV = mat.fsxm_DetailOffsetV
+            mat.fsxm_DetailRotation = mat.fsxm_DetailRotation
+            mat.fsxm_DetailScaleV = mat.fsxm_DetailScaleV
+            mat.fsxm_DetailTextureUVChannel = mat.fsxm_DetailTextureUVChannel
+            mat.fsxm_DiffuseTextureUVChannel = mat.fsxm_DiffuseTextureUVChannel
+            mat.fsxm_SpecularTextureUVChannel = mat.fsxm_SpecularTextureUVChannel
+            mat.fsxm_AlbedoTextureUVChannel = mat.fsxm_AlbedoTextureUVChannel
+            mat.fsxm_MetallicTextureUVChannel = mat.fsxm_MetallicTextureUVChannel
+            mat.fsxm_EmissiveTextureUVChannel = mat.fsxm_EmissiveTextureUVChannel
+            mat.fsxm_MaskFinalAlphaBlendByDetailBlendMask = mat.fsxm_MaskFinalAlphaBlendByDetailBlendMask
+            mat.fsxm_MaskDiffuseBlendsByDetailBlendMask = mat.fsxm_MaskDiffuseBlendsByDetailBlendMask
+            mat.fsxm_MaterialScript = mat.fsxm_MaterialScript
+            mat.fsxm_TemperatureScale = mat.fsxm_TemperatureScale
+            mat.fsxm_UseDetailAlphaAsBlendMask = mat.fsxm_UseDetailAlphaAsBlendMask
+            mat.fsxm_UseEmissiveAlphaAsHeatMap = mat.fsxm_UseEmissiveAlphaAsHeatMap
+            mat.fsxm_ClearcoatTextureUVChannel = mat.fsxm_ClearcoatTextureUVChannel
+
+            mat.fsxm_vcpaneltex = mat.fsxm_vcpaneltex
+            mat.fsxm_nnumbertex = mat.fsxm_nnumbertex
+
+        def reset_material_properties(self, context):
+            mat = context.active_object.active_material
+            mat.fsxm_BaseColor = (1.0, 1.0, 1.0, 1.0)
+            mat.fsxm_DiffuseColor = (1.0, 1.0, 1.0, 1.0)
+            mat.fsxm_SpecularColor = (1.0, 1.0, 1.0, 1.0)
+            mat.fsxm_EmissiveColor = (0.0, 0.0, 0.0, 1.0)
+            mat.fsxm_metallic_scale = 0
+            mat.fsxm_smoothness_scale = 1
+            mat.fsxm_power_scale = 1
+
+            # Textures
+            mat.fsxm_diffusetexture = None
+            mat.fsxm_metallictexture = None
+            mat.fsxm_speculartexture = None
+            mat.fsxm_bumptexture = None
+            mat.fsxm_detailtexture = None
+            mat.fsxm_emissivetexture = None
+            mat.fsxm_fresnelramp = None
+            mat.fsxm_clearcoattexture = None
+
+            # mat Properties
+            mat.fsxm_rendermode = 'Opaque'
+            mat.fsxm_metallicsource = 'MetallicAlpha'
+            mat.fsxm_metallichasocclusion = True
+            mat.fsxm_metallichasreflection = False
+            mat.fsxm_maskedthreshold = 0.0
+            mat.fsxm_alphatocoverage = False
+            mat.fsxm_decalorder = 0
+            mat.fsxm_clearcoatcontainsnormals = False
+
+            mat.fsxm_ztest = False
+            mat.fsxm_ztestmode = 'Never'
+            mat.fsxm_ztestlevel = 0.0
+
+            mat.fsxm_allowbloom = False
+            mat.fsxm_emissivebloom = False
+            mat.fsxm_ambientlightscale = 0.5
+            mat.fsxm_bloommaterialcopy = False
+            mat.fsxm_bloommaterialmodulatingalpha = False
+            mat.fsxm_nospecbloom = False
+            mat.fsxm_bloomfloor = 0.9
+
+            mat.fsxm_emissivemode = 'AdditiveNightOnly'
+            mat.fsxm_emissivemode_pbr = 'AdditiveNightOnly'
+
+            mat.fsxm_assumevertical = False
+            mat.fsxm_blendconst = False
+            mat.fsxm_doublesided = False
+            mat.fsxm_forceclamp = False
+            mat.fsxm_forcewrap = False
+            mat.fsxm_nobasespec = False
+            mat.fsxm_noshadow = False
+            mat.fsxm_nozwrite = False
+            mat.fsxm_pverts = False
+            mat.fsxm_skinned = False
+            mat.fsxm_zwrite = False
+            mat.fsxm_vshadow = False
+
+            mat.fsxm_zbias = 0
+
+            mat.fsxm_falphamult = 1.0
+            mat.fsxm_falpha = False
+
+            mat.fsxm_srcblend = 'One'
+            mat.fsxm_destblend = 'Zero'
+
+            mat.fsxm_fresdif = False
+            mat.fsxm_fresref = False
+            mat.fsxm_fresspec = False
+
+            mat.fsxm_detailscale = 1.0
+            mat.fsxm_bumpscale = 1.0
+
+            mat.fsxm_precip1 = False
+            mat.fsxm_precip2 = False
+            mat.fsxm_precipoffs = 0.0
+
+            mat.fsxm_blddif = False
+            mat.fsxm_bldspec = False
+            mat.fsxm_bledif = False
+            mat.fsxm_blespec = False
+            mat.fsxm_refscale = 0   # 19/03/2023 changed name to Reflection scale to be the same as in 3DS and MCX  Dave_W
+            mat.fsxm_specscale = 64
+            mat.fsxm_globenv = True
+            mat.fsxm_environmentmap = None
+
+            # for PBR mat. ON
+            mat.fsxm_normal_scale_x = 1.0
+            mat.fsxm_normal_scale_y = 1.0
+            mat.fsxm_detail_scale_x = 1.0
+            mat.fsxm_detail_scale_y = 1.0
+
+            mat.fsxm_BumpTextureUVChannel = 1
+            mat.fsxm_DetailBlendMode = 'Multiply'
+            mat.fsxm_DetailBlendWeight = 0.0
+            mat.fsxm_DetailColor = (1.0, 1.0, 1.0, 1.0)
+            mat.fsxm_DetailOffsetU = 0.0
+            mat.fsxm_DetailOffsetV = 0.0
+            mat.fsxm_DetailRotation = 0.0
+            mat.fsxm_DetailScaleV = 1.0
+            mat.fsxm_DetailTextureUVChannel = 1
+            mat.fsxm_DiffuseTextureUVChannel = 1
+            mat.fsxm_SpecularTextureUVChannel = 1
+            mat.fsxm_AlbedoTextureUVChannel = 1
+            mat.fsxm_MetallicTextureUVChannel = 1
+            mat.fsxm_EmissiveTextureUVChannel = 1
+            mat.fsxm_MaskFinalAlphaBlendByDetailBlendMask = False
+            mat.fsxm_MaskDiffuseBlendsByDetailBlendMask = False
+            mat.fsxm_MaterialScript = ""
+            mat.fsxm_TemperatureScale = 1.0
+            mat.fsxm_UseDetailAlphaAsBlendMask = False
+            mat.fsxm_UseEmissiveAlphaAsHeatMap = False
+            mat.fsxm_ClearcoatTextureUVChannel = 1
+
+            mat.fsxm_vcpaneltex = False
+            mat.fsxm_nnumbertex = False
+
         if mat.fsxm_material_mode == 'PBR':
             MaterialUtil.CreatePBRShader(mat)
+            set_material_properties(self, context)
             print("Switched to PBR material.")
         elif mat.fsxm_material_mode == 'FSX':
             MaterialUtil.CreateSpecShader(mat)
+            set_material_properties(self, context)
             print("Switched to specular material.")
         else:
+            for n in mat.node_tree.nodes:
+                mat.node_tree.nodes.remove(n)
+            reset_material_properties(self, context)
             print("Switched to non-sim material.")
 
     def switch_sdk(self, context):
@@ -132,6 +373,30 @@ class Environment():
         except:
             pass
 
+    def setMetallicScale(self, context):
+        mat = context.active_object.active_material
+        try:
+            if mat.fsxm_material_mode == 'PBR':
+                mat.node_tree.nodes["Metallic Scale"].inputs["Value"].default_value[0] = mat.fsxm_metallic_scale
+        except:
+            pass
+
+    def setSmoothnessScale(self, context):
+        mat = context.active_object.active_material
+        try:
+            if mat.fsxm_material_mode == 'PBR':
+                mat.node_tree.nodes["Smoothness Scale"].inputs["Value"].default_value[0] = mat.fsxm_smoothness_scale
+        except:
+            pass
+
+    def setPowerScale(self, context):
+        mat = context.active_object.active_material
+        try:
+            if mat.fsxm_material_mode == 'FSX':
+                mat.node_tree.nodes["Power Scale"].inputs["Value"].default_value[0] = mat.fsxm_power_scale
+        except:
+            pass
+
     def setBumpScale(self, context):
         mat = context.active_object.active_material
         try:
@@ -156,63 +421,212 @@ class Environment():
         except:
             pass
 
-    def matchdiffuse(self, context):
+    def setBaseColor(self, context):
         mat = context.active_object.active_material
 
-        if mat.node_tree.nodes.get("Diffuse", None) is not None:
-            mat.node_tree.nodes["Diffuse"].image = mat.fsxm_diffusetexture
-            if mat.fsxm_diffusetexture is not None:
-                if mat.fsxm_diffusetexture.name.split(".")[len(mat.fsxm_diffusetexture.name.split(".")) - 1] == 'dds':
-                    mat.node_tree.nodes["Diffuse"].texture_mapping.scale[1] = -1
-                else:
-                    mat.node_tree.nodes["Diffuse"].texture_mapping.scale[1] = 1
+        if mat.node_tree.nodes.get("Base Color", None) is not None:
+            mat.node_tree.nodes["Base Color"].outputs[0].default_value = mat.fsxm_BaseColor
+
+    def setEmissiveColor(self, context):
+        mat = context.active_object.active_material
+
+        if mat.node_tree.nodes.get("Principled BSDF", None) is not None:
+            mat.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value = mat.fsxm_EmissiveColor
+            return
+        if mat.node_tree.nodes.get("Specular BSDF", None) is not None:
+            mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value = mat.fsxm_EmissiveColor
+
+    def setDiffuseColor(self, context):
+        mat = context.active_object.active_material
+
+        if mat.node_tree.nodes.get("Diffuse Color", None) is not None:
+            mat.node_tree.nodes["Diffuse Color"].outputs[0].default_value = mat.fsxm_DiffuseColor
+
+    def setSpecularColor(self, context):
+        mat = context.active_object.active_material
+
+        if mat.node_tree.nodes.get("Specular Color", None) is not None:
+            mat.node_tree.nodes["Specular Color"].outputs[0].default_value = mat.fsxm_SpecularColor
+
+    def setMetallicScale(self, context):
+        mat = context.active_object.active_material
+
+        if mat.node_tree.nodes.get("Metallic Factor", None) is not None:
+            mat.node_tree.nodes["Metallic Factor"].outputs[0].default_value = mat.fsxm_metallic_scale
+
+    def setSmoothnessScale(self, context):
+        mat = context.active_object.active_material
+
+        if mat.node_tree.nodes.get("Smoothness Factor", None) is not None:
+            mat.node_tree.nodes["Smoothness Factor"].outputs[0].default_value = mat.fsxm_smoothness_scale
+
+    def setPowerScale(self, context):
+        mat = context.active_object.active_material
+
+        if mat.node_tree.nodes.get("Power Factor", None) is not None:
+            mat.node_tree.nodes["Power Factor"].outputs[0].default_value = mat.fsxm_power_scale
+
+    def matchdiffuse(self, context):
+        # ToDo: add in links required for diffuse (albedo specular) texture
+        mat = context.active_object.active_material
+        print("MatchDiffuse", mat.fsxm_material_mode)
+        if mat.fsxm_material_mode == 'NONE':
+            return
+        nodes = mat.node_tree.nodes
+        links = mat.node_tree.links
+        scale_diffuse = 1
+        scale_detail = 1
+        if mat.fsxm_diffusetexture is not None:
+            if mat.fsxm_diffusetexture.name.split(".")[len(mat.fsxm_diffusetexture.name.split(".")) - 1] == 'dds':
+                scale_diffuse = -1
+        if mat.fsxm_detailtexture is not None:
+            if mat.fsxm_detailtexture.name.split(".")[len(mat.fsxm_detailtexture.name.split(".")) - 1] == 'dds':
+                scale_detail = -1
+        if mat.fsxm_diffusetexture is None and mat.fsxm_detailtexture is None:
+            mat.node_tree.nodes["Detail"].image = mat.fsxm_detailtexture
+            if mat.fsxm_material_mode == 'PBR':
+                mat.node_tree.nodes["Albedo"].image = mat.fsxm_diffusetexture
+                links.new(nodes["Base Color Mix"].outputs["Color"], nodes["Principled BSDF"].inputs["Base Color"])
+                if nodes["Albedo"].outputs["Alpha"].links is not None:
+                    for l in nodes["Albedo"].outputs["Alpha"].links:
+                        print("Alpha links", nodes["Albedo"].outputs["Alpha"].links, l)
+                        if l.to_socket == nodes["Principled BSDF"].inputs["Alpha"]:
+                            links.remove(l)
+            elif mat.fsxm_material_mode == 'FSX':
+                mat.node_tree.nodes["Diffuse"].image = mat.fsxm_diffusetexture
+                links.new(nodes["Diffuse Color Blend"].outputs["Color"], nodes["Specular BSDF"].inputs["Base Color"])
+                if nodes["Transparency"].outputs["Color"].links is not None:
+                    for l in nodes["Transparency"].outputs["Color"].links:
+                        print("Transparency links", nodes["Transparency"].outputs["Color"].links, l)
+                        if l.to_socket == nodes["Specular BSDF"].inputs["Transparency"]:
+                            links.remove(l)
+
+        if mat.fsxm_diffusetexture is not None and mat.fsxm_detailtexture is None:
+            mat.node_tree.nodes["Detail"].image = mat.fsxm_detailtexture
+            if mat.fsxm_material_mode == 'PBR':
+                mat.node_tree.nodes["Albedo"].image = mat.fsxm_diffusetexture
+                links.new(nodes["Albedo"].outputs["Color"], nodes["Base Color Mix"].inputs["Color1"])
+                links.new(nodes["Base Color Mix"].outputs["Color"], nodes["Principled BSDF"].inputs["Base Color"])
+                links.new(nodes["Albedo"].outputs["Alpha"], nodes["Principled BSDF"].inputs["Alpha"])
+                mat.node_tree.nodes["Albedo"].texture_mapping.scale[1] = scale_diffuse
+            elif  mat.fsxm_material_mode == 'FSX':
+                mat.node_tree.nodes["Diffuse"].image = mat.fsxm_diffusetexture
+                links.new(nodes["Diffuse"].outputs["Color"], nodes["Diffuse Color Blend"].inputs["Color2"])
+                links.new(nodes["Transparency"].outputs["Color"], nodes["Specular BSDF"].inputs["Transparency"])
+                mat.node_tree.nodes["Diffuse"].texture_mapping.scale[1] = scale_diffuse
+
+        if mat.fsxm_diffusetexture is not None and mat.fsxm_detailtexture is not None:
+            mat.node_tree.nodes["Detail"].image = mat.fsxm_detailtexture
+            mat.node_tree.nodes["Detail"].texture_mapping.scale[1] = scale_detail
+            if mat.fsxm_material_mode == 'PBR':
+                mat.node_tree.nodes["Albedo"].image = mat.fsxm_diffusetexture
+                links.new(nodes["Albedo"].outputs["Color"], nodes["Base Color Mix"].inputs["Color1"])
+                links.new(nodes["Detail Blend"].outputs["Color"], nodes["Principled BSDF"].inputs["Base Color"])
+                links.new(nodes["Albedo"].outputs["Alpha"], nodes["Principled BSDF"].inputs["Alpha"])
+                mat.node_tree.nodes["Albedo"].texture_mapping.scale[1] = scale_diffuse
+            elif  mat.fsxm_material_mode == 'FSX':
+                mat.node_tree.nodes["Diffuse"].image = mat.fsxm_diffusetexture
+                links.new(nodes["Diffuse"].outputs["Color"], nodes["Diffuse Color Blend"].inputs["Color2"])
+                links.new(nodes["Diffuse Color Blend"].outputs["Color"], nodes["Detail Blend"].inputs["Color1"])
+                links.new(nodes["Transparency"].outputs["Color"], nodes["Specular BSDF"].inputs["Transparency"])
+                mat.node_tree.nodes["Diffuse"].texture_mapping.scale[1] = scale_diffuse
 
     def matchnormal(self, context):
         mat = context.active_object.active_material
+        print("MatchNormal", mat.fsxm_material_mode)
+        if mat.fsxm_material_mode == 'NONE':
+            return
+        nodes = mat.node_tree.nodes
+        links = mat.node_tree.links
+        scale = 1
+        fac = 0
+        strength = 1
+        if mat.fsxm_bumptexture is not None:
+            if mat.fsxm_bumptexture.name.split(".")[len(mat.fsxm_bumptexture.name.split(".")) - 1] == 'dds':
+                scale = -1
+                fac = 1
 
         if mat.node_tree.nodes.get("Normal", None) is not None:
             mat.node_tree.nodes["Normal"].image = mat.fsxm_bumptexture
-            mat.node_tree.nodes["Normal"].image.colorspace_settings.name = 'Non-Color'
-            if mat.fsxm_bumptexture is not None:
-                if mat.fsxm_bumptexture.name.split(".")[len(mat.fsxm_bumptexture.name.split(".")) - 1] == 'dds':
-                    mat.node_tree.nodes["Normal"].texture_mapping.scale[1] = -1
-                    if mat.node_tree.nodes.get("Mix Normals", None) is not None:
-                        mat.node_tree.nodes["Mix Normals"].inputs["Fac"].default_value = 1
-                else:
-                    mat.node_tree.nodes["Normal"].texture_mapping.scale[1] = 1
-                    if mat.node_tree.nodes.get("Mix Normals", None) is not None:
-                        mat.node_tree.nodes["Mix Normals"].inputs["Fac"].default_value = 0
+            if mat.fsxm_bumptexture is None:
+                if nodes["Normal Map"].outputs["Normal"].links is not None:
+                    for l in nodes["Normal Map"].outputs["Normal"].links:
+                        print("Normal Map links", nodes["Normal Map"].outputs["Normal"].links, l)
+                        if mat.fsxm_material_mode == 'FSX':
+                            if l.to_socket == nodes["Specular BSDF"].inputs["Normal"]:
+                                links.remove(l)
+                        if mat.fsxm_material_mode == 'PBR':
+                            if l.to_socket == nodes["Principled BSDF"].inputs["Normal"]:
+                                links.remove(l)
 
-            if mat.node_tree.nodes.get("Normal Map", None) is not None:
-                if mat.fsxm_bumptexture is None:
-                    mat.node_tree.nodes["Normal Map"].inputs["Strength"].default_value = 0
-                else:
-                    mat.node_tree.nodes["Normal Map"].inputs["Strength"].default_value = 1
+            if mat.fsxm_bumptexture is not None:
+                mat.node_tree.nodes["Normal"].texture_mapping.scale[1] = scale
+                mat.node_tree.nodes["Normal"].image.colorspace_settings.name = 'Non-Color'
+                if mat.node_tree.nodes.get("Mix Normals", None) is not None:
+                    mat.node_tree.nodes["Mix Normals"].inputs["Fac"].default_value = fac
+                if mat.node_tree.nodes.get("Normal Map", None) is not None:
+                    mat.node_tree.nodes["Normal Map"].inputs["Strength"].default_value = strength
+                if mat.fsxm_material_mode == 'FSX':
+                    links.new(nodes["Normal Map"].outputs["Normal"], nodes["Specular BSDF"].inputs["Normal"])
+                if mat.fsxm_material_mode == 'PBR':
+                    links.new(nodes["Normal Map"].outputs["Normal"], nodes["Principled BSDF"].inputs["Normal"])
 
     def matchmetallic(self, context):
         mat = context.active_object.active_material
+        print("MatchMetallic", mat.fsxm_material_mode)
+        if mat.fsxm_material_mode == 'NONE':
+            return
+        nodes = mat.node_tree.nodes
+        links = mat.node_tree.links
+        scale = 1
+        if mat.fsxm_metallictexture is not None:
+            if mat.fsxm_metallictexture.name.split(".")[len(mat.fsxm_metallictexture.name.split(".")) - 1] == 'dds':
+                scale = -1
 
         if mat.node_tree.nodes.get("Metallic", None) is not None:
             mat.node_tree.nodes["Metallic"].image = mat.fsxm_metallictexture
-            mat.node_tree.nodes["Metallic"].image.colorspace_settings.name = 'Non-Color'
-            if mat.fsxm_metallictexture is not None:
-                if mat.fsxm_metallictexture.name.split(".")[len(mat.fsxm_metallictexture.name.split(".")) - 1] == 'dds':
-                    mat.node_tree.nodes["Metallic"].texture_mapping.scale[1] = -1
-                else:
-                    mat.node_tree.nodes["Metallic"].texture_mapping.scale[1] = 1
+            oneminus_node = mat.node_tree.nodes.get("Invert 1 minus")
+            if mat.fsxm_metallictexture is None:
+                metallicfactor_node = mat.node_tree.nodes.get("Metallic Factor")
+                smoothnessfactor_node = mat.node_tree.nodes.get("Smoothness Factor")
+                links.new(metallicfactor_node.outputs[0], nodes["Principled BSDF"].inputs["Metallic"])
+                links.new(smoothnessfactor_node.outputs[0], oneminus_node.inputs[1])
+
+            elif mat.fsxm_metallictexture is not None:
+                mat.node_tree.nodes["Metallic"].image.colorspace_settings.name = 'Non-Color'
+                mat.node_tree.nodes["Metallic"].texture_mapping.scale[1] = scale
+                separatered_node = mat.node_tree.nodes.get("Separate Red")
+                links.new(nodes["Metallic"].outputs["Alpha"], oneminus_node.inputs[1])
+                links.new(separatered_node.outputs["R"], nodes["Principled BSDF"].inputs["Metallic"])
+                # ToDo: add in links required for metallic and smoothness texture
 
     def matchspecular(self, context):
         mat = context.active_object.active_material
+        print("MatchSpecular", mat.fsxm_material_mode)
+        if mat.fsxm_material_mode == 'NONE':
+            return
+        nodes = mat.node_tree.nodes
+        links = mat.node_tree.links
+        scale = 1
+        if mat.fsxm_speculartexture is not None:
+            if mat.fsxm_speculartexture.name.split(".")[len(mat.fsxm_speculartexture.name.split(".")) - 1] == 'dds':
+                scale = -1
 
         if mat.node_tree.nodes.get("specular", None) is not None:       # "specular" must not be capitalized like other node names. See line 132 func_material.py   Dave_W
             mat.node_tree.nodes["specular"].image = mat.fsxm_speculartexture
+            if mat.fsxm_speculartexture is None:
+                if nodes["specular"].outputs["Color"].links is not None:
+                    for l in nodes["specular"].outputs["Color"].links:
+                        print("Specular links", nodes["specular"].outputs["Color"].links, l)
+                        if l.to_socket == nodes["Specular Color Blend"].inputs["Color2"]:
+                            links.remove(l)
             if mat.fsxm_speculartexture is not None:
-                if mat.fsxm_speculartexture.name.split(".")[len(mat.fsxm_speculartexture.name.split(".")) - 1] == 'dds':
-                    mat.node_tree.nodes["specular"].texture_mapping.scale[1] = -1
-                else:
-                    mat.node_tree.nodes["specular"].texture_mapping.scale[1] = 1
+                mat.node_tree.nodes["specular"].texture_mapping.scale[1] = scale
+                links.new(nodes["specular"].outputs["Color"], nodes["Specular Color Blend"].inputs["Color2"])
+                # ToDo: add in links required for specular texture, specular color, level, glosiness, power (soften)
 
     def matchdetail(self, context):
+        # not used see matchdiffuse
         mat = context.active_object.active_material
 
         if mat.node_tree.nodes.get("Detail", None) is not None:
@@ -231,14 +645,33 @@ class Environment():
 
     def matchemissive(self, context):
         mat = context.active_object.active_material
+        print("MatchEmissive", mat.fsxm_material_mode)
+        if mat.fsxm_material_mode == 'NONE':
+            return
+        nodes = mat.node_tree.nodes
+        links = mat.node_tree.links
+        scale = 1
+        if mat.fsxm_emissivetexture is not None:
+            if mat.fsxm_emissivetexture.name.split(".")[len(mat.fsxm_emissivetexture.name.split(".")) - 1] == 'dds':
+                scale = -1
 
         if mat.node_tree.nodes.get("Emissive", None) is not None:
             mat.node_tree.nodes["Emissive"].image = mat.fsxm_emissivetexture
-            if mat.fsxm_emissivetexture is not None:
-                if mat.fsxm_emissivetexture.name.split(".")[len(mat.fsxm_emissivetexture.name.split(".")) - 1] == 'dds':
-                    mat.node_tree.nodes["Emissive"].texture_mapping.scale[1] = -1
-                else:
-                    mat.node_tree.nodes["Emissive"].texture_mapping.scale[1] = 1
+            if mat.fsxm_emissivetexture is None:
+                for l in nodes["Emissive"].outputs["Color"].links:
+                    print("Emissive links", nodes["Emissive"].outputs["Color"].links, l)
+                    if mat.fsxm_material_mode == 'FSX':
+                        if l.to_socket == nodes["Specular BSDF"].inputs["Emissive Color"]:
+                            links.remove(l)
+                    if mat.fsxm_material_mode == 'PBR':
+                        if l.to_socket == nodes["Principled BSDF"].inputs["Emission"]:
+                            links.remove(l)
+            elif mat.fsxm_emissivetexture is not None:
+                mat.node_tree.nodes["Emissive"].texture_mapping.scale[1] = scale
+                if mat.fsxm_material_mode == 'FSX':
+                    links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Specular BSDF"].inputs["Emissive Color"])
+                if mat.fsxm_material_mode == 'PBR':
+                    links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Principled BSDF"].inputs["Emission"])
 
     # copied and edited from matchmetallic       Dave_W
     def matchclearcoat(self, context):
@@ -246,8 +679,8 @@ class Environment():
 
         if mat.node_tree.nodes.get("Clearcoat", None) is not None:
             mat.node_tree.nodes["Clearcoat"].image = mat.fsxm_clearcoattexture
-            mat.node_tree.nodes["Clearcoat"].image.colorspace_settings.name = 'Non-Color'
             if mat.fsxm_clearcoattexture is not None:
+                mat.node_tree.nodes["Clearcoat"].image.colorspace_settings.name = 'Non-Color'
                 if (mat.fsxm_clearcoattexture.name.split(".")[len(mat.fsxm_clearcoattexture.name.split(".")) - 1] == 'dds'):
                     mat.node_tree.nodes["Clearcoat"].texture_mapping.scale[1] = -1
                 else:
@@ -349,12 +782,24 @@ class Environment():
 
     detailblendmode = [(a, a, "") for a in ['Multiply', 'Blend']]
 
+    # need color PBR Albedo (base color) and SPECULAR fallbackdiffuse and specular color
+    # need PBR metallic scale, smoothness scale (1 - roughness)
+    # need Specular Level - is Power, Glossiness - not used??, soften - not used?? - have no idea - see P3D SDK 3DS Max
+
+    Material.fsxm_BaseColor = FloatVectorProperty(name="BaseColor", subtype="COLOR", size=4, min=0.0, max=1.0, default=(1.0, 1.0, 1.0, 1.0), update=setBaseColor)
+    Material.fsxm_DiffuseColor = FloatVectorProperty(name="DiffuseColor", subtype="COLOR", size=4, min=0.0, max=1.0, default=(1.0, 1.0, 1.0, 1.0), update=setDiffuseColor)
+    Material.fsxm_SpecularColor = FloatVectorProperty(name="SpecularColor", subtype="COLOR", size=4, min=0.0, max=1.0, default=(1.0, 1.0, 1.0, 1.0), update=setSpecularColor)
+    Material.fsxm_EmissiveColor = FloatVectorProperty(name="EmissiveColor", subtype="COLOR", size=4, min=0.0, max=1.0, default=(0.0, 0.0, 0.0, 1.0), update=setEmissiveColor)
+    Material.fsxm_metallic_scale = FloatProperty(name="Metallic_scale", default=0, min=0, max=1.0, update=setMetallicScale)
+    Material.fsxm_smoothness_scale = FloatProperty(name="Smoothness_scale", default=1, min=0, max=1.0, update=setSmoothnessScale)
+    Material.fsxm_power_scale = FloatProperty(name="Power_scale", default=1, min=0, max=999, update=setPowerScale)
+
     # Textures
     Material.fsxm_diffusetexture = PointerProperty(type=Image, name="diffuse map", update=matchdiffuse)
     Material.fsxm_metallictexture = PointerProperty(type=Image, name="metallic map", update=matchmetallic)
     Material.fsxm_speculartexture = PointerProperty(type=Image, name="specular map", update=matchspecular)
     Material.fsxm_bumptexture = PointerProperty(type=Image, name="normal map", update=matchnormal)
-    Material.fsxm_detailtexture = PointerProperty(type=Image, name="detail map", update=matchdetail)
+    Material.fsxm_detailtexture = PointerProperty(type=Image, name="detail map", update=matchdiffuse)
     Material.fsxm_emissivetexture = PointerProperty(type=Image, name="emissive map", update=matchemissive)
     Material.fsxm_fresnelramp = PointerProperty(type=Image, name="fresnel ramp")
     Material.fsxm_clearcoattexture = PointerProperty(type=Image, name="clearcoat map", update=matchclearcoat)       # Dave_W

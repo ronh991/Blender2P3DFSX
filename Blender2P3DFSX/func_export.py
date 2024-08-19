@@ -100,7 +100,7 @@ class FSXExporter:
         self.log.log("Gathering top-level objects from scene...", False, True)
         ExportMap = {}
         for idx, Object in enumerate(self.context.scene.objects):
-            Util.Update_Progress("Progress: ", idx / len(self.context.scene.objects))
+            Util.Update_Progress("Progress Objects: ", idx / len(self.context.scene.objects))
 
             if Object.type == 'EMPTY':
                 self.log.log("object found: %s [EMPTY]" % Object.name, True)
@@ -114,19 +114,19 @@ class FSXExporter:
                 if self.config.ExportSkinWeights and Object.select_get():
                     for Bone in Object.data.bones:
                         ExportMap[Bone] = BoneExportObject(self.config, self, Bone, Object)
-        Util.Update_Progress("Progress: ", 1)
+        Util.Update_Progress("Progress Objects: ", 1)
         self.log.log("All top-level objects from scene gathered.", False, True)
         self.log.log("")
 
         # write all children and parents
         self.log.log("Gathering child objects from scene...", False, True)
         for idx, ob in enumerate(ExportMap.values()):
-            Util.Update_Progress("Progress: ", idx / len(ExportMap.values()))
+            Util.Update_Progress("Progress Child Objects: ", idx / len(ExportMap.values()))
             for child in ob.BlenderObject.children:
                 ob.Children.append(ExportMap[child])
             if ob.BlenderObject.parent:
                 ob.Parent = ExportMap[ob.BlenderObject.parent]
-        Util.Update_Progress("Progress: ", 1)
+        Util.Update_Progress("Progress Child Objects: ", 1)
         self.log.log("All child objects from scene gathered.", False, True)
         self.log.log("")
 
@@ -211,12 +211,12 @@ class FSXExporter:
         if self.config.ExportAnimation:
             self.log.log("Gathering animation data...", False, True)
             for idx, Object in enumerate(self.ExportList):
-                Util.Update_Progress("Progress: ", idx / len(self.ExportList))
+                Util.Update_Progress("Progress Animation: ", idx / len(self.ExportList))
                 blenObj = Object.BlenderObject
                 if blenObj.fsx_anim_tag not in self.AnimList and blenObj.fsx_anim_tag:
                     self.log.log("Animation found for: " + blenObj.name, True)
                     self.AnimList.append(blenObj.fsx_anim_tag)
-            Util.Update_Progress("Progress: ", 1)
+            Util.Update_Progress("Progress Animation: ", 1)
 
             # setup generators and writer
             AnimationGenerators = self.__GatherAnimationGenerators()
@@ -260,11 +260,11 @@ class FSXExporter:
         self.__OpenRootFrame()
         for idx, Object in enumerate(self.RootExportList):
             self.log.log("Writing information of %s" % Object.name, True, True)
-            Util.Update_Progress("Progress: ", idx / len(self.RootExportList))
+            Util.Update_Progress("Progress Geometry: ", idx / len(self.RootExportList))
             # This one is tricky, due to the changes in Blenders materials:
             Object.Write()
         self.__CloseRootFrame()
-        Util.Update_Progress("Progress: ", 1)
+        Util.Update_Progress("Progress Geometry: ", 1)
         self.log.log("Finished writing geometry information. Closing file.", False, True)
         self.log.log()
 

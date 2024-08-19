@@ -525,7 +525,7 @@ class MeshExportObject(ExportObject):
             # This new function will analyse the Material nodes to populate texture file names
             # and values as closely to the Blender Render as possible. ON
             def AnalyzeMaterial(parent, Material):
-
+                print(" Analyse Material", Material.name, "\r\n")
                 # This function is going through all input node of the parameter <node>, until it finds a node of type <node_type>
                 # The function will call itself on every non-texture-image nodes to crawl through the whole tree of nodes and links.
                 # If <selected_input_node> is passed with a value != -1, ONLY that input slot is being analyzed.
@@ -657,13 +657,17 @@ class MeshExportObject(ExportObject):
                     detail_texture=None,
                     fresnel_texture=None,
                     environment_texture=None,
+                    # ToDo: need Specular Level (Power)
+                    power = 1,
                     metallic_texture=None,  # PBR only
+                    # ToDo: have these already just need to set them below
                     metallic_value=0,
                     metallic_smoothness=1,
 
                     clearcoat_texture=None,
                     clearcoat_value=0,
                     clearcoat_smoothness=1,
+                    #precipitation_texture=None,
                 )
 
                 if (Material):
@@ -682,9 +686,17 @@ class MeshExportObject(ExportObject):
 
                     if Material.fsxm_material_mode == 'FSX':
                         bsdf_node = Material.node_tree.nodes.get('Specular') or Material.node_tree.nodes.get('Specular BSDF')  # Added or to make exporter work with Blender >= 3.0 Dave_W
+                        diffuse_color_node = Material.node_tree.nodes.get('Diffuse Color')
+                        specular_color_node = Material.node_tree.nodes.get('Specular Color')
+                        power_node = Material.node_tree.nodes.get('Power Factor')
+                        #print("FSX")
 
                     elif Material.fsxm_material_mode == 'PBR':
                         bsdf_node = Material.node_tree.nodes.get('Principled BSDF')
+                        base_color_node = Material.node_tree.nodes.get('Base Color')
+                        metallic_node = Material.node_tree.nodes.get('Metallic Factor')
+                        smoothness_node = Material.node_tree.nodes.get('Smoothness Factor')
+                        #print("PBR", bsdf_node ,metallic_node, smoothness_node)
 
                     if (bsdf_node is None):
                         msg = "ERROR"
@@ -700,15 +712,29 @@ class MeshExportObject(ExportObject):
                         bmpMat = useBmp(self)
 
                     # 1. diffuse/albedo texture:
-                        n_base_color = bsdf_node.inputs.get('Base Color')
-                        # get the base color:
-                        data["diffuse_color"] = (n_base_color.default_value[0], n_base_color.default_value[1], n_base_color.default_value[2], n_base_color.default_value[3])
+                        # ToDo: get this from diffuse color node for SPECULAR and albedo color node for PBR - not bsdf
+                        # ToDo: also need to get metallic factor and smoothness (1-roughness)
+                        if Material.fsxm_material_mode == 'FSX':
+                            
+                            n_base_color = diffuse_color_node.outputs.get('Color')
+                            n_specular_color = specular_color_node.outputs.get('Color')
+                            # get the base color:
+                            data["diffuse_color"] = (n_base_color.default_value[0], n_base_color.default_value[1], n_base_color.default_value[2], n_base_color.default_value[3])
+                            data["specular_color"] = (n_specular_color.default_value[0], n_specular_color.default_value[1], n_specular_color.default_value[2])
+                            # ToDo: set the power - Specular Level
+                            data["power"] = power_node.outputs.get('Value').default_value
+
+                        elif Material.fsxm_material_mode == 'PBR':
+                            n_base_color = base_color_node.outputs['Color']
+                            #print("Base Color", n_base_color)
+                            # get the base color:
+                            data["diffuse_color"] = (n_base_color.default_value[0], n_base_color.default_value[1], n_base_color.default_value[2], n_base_color.default_value[3])
 
                         # get the texture:
                         if Material.fsxm_diffusetexture is not None:
                             data["diffuse_texture"] = Util.ReplaceFileNameExt(Material.fsxm_diffusetexture.name, bmpMat)
-                        if data["diffuse_texture"] is None:
-                            data["diffuse_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Base Color'), "diffuse", "diffuse/albedo", Material)
+                        #if data["diffuse_texture"] is None:
+                        #    data["diffuse_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Base Color'), "diffuse", "diffuse/albedo", Material)
 
                         # check if the texture is a vcockpit gauge:
                         if Material.fsxm_vcpaneltex is True:
@@ -719,10 +745,10 @@ class MeshExportObject(ExportObject):
                         if Material.fsxm_bumptexture is not None:
                             data["normal_texture"] = Util.ReplaceFileNameExt(Material.fsxm_bumptexture.name, bmpMat)
                         data["normal_scale"] = Material.fsxm_normal_scale_x
-                        if data["normal_texture"] is None:
-                            normal_map_node = Material.node_tree.nodes.get('Normal Map')
-                            if normal_map_node is not None:
-                                data["normal_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Normal'), "normal", "normal", Material)
+                        # if data["normal_texture"] is None:
+                            # normal_map_node = Material.node_tree.nodes.get('Normal Map')
+                            # if normal_map_node is not None:
+                                # data["normal_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Normal'), "normal", "normal", Material)
 
                     # 3. Reflection map
                         if Material.fsxm_environmentmap is not None:
@@ -731,8 +757,8 @@ class MeshExportObject(ExportObject):
                     # 4. Detail map
                         if Material.fsxm_detailtexture is not None:
                             data["detail_texture"] = Util.ReplaceFileNameExt(Material.fsxm_detailtexture.name, bmpMat)
-                        if data["detail_texture"] is None:
-                            data["detail_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Base Color'), "Detail", "Detail", Material)
+                        # if data["detail_texture"] is None:
+                            # data["detail_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Base Color'), "Detail", "Detail", Material)
 
                     # 5. Fresnel map
                         if Material.fsxm_fresnelramp is not None:
@@ -742,15 +768,16 @@ class MeshExportObject(ExportObject):
                         if Material.fsxm_material_mode == 'FSX':
                         # 6.a Specular texture/color
                             # get the specularity:
-                            data["specular_color"] = (bsdf_node.inputs.get('Specular').default_value[0], bsdf_node.inputs.get('Specular').default_value[1], bsdf_node.inputs.get('Specular').default_value[2])
-
+                            # ToDo: get this from specular color node
+                            #data["specular_color"] = (specular_color_node.inputs.get('Specular').default_value[0], bsdf_node.inputs.get('Specular').default_value[1], bsdf_node.inputs.get('Specular').default_value[2])
                             # get the texture:
                             if Material.fsxm_speculartexture is not None:
                                 data["specular_texture"] = Util.ReplaceFileNameExt(Material.fsxm_speculartexture.name, bmpMat)
-                            if data["specular_texture"] is None:
-                                data["specular_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Specular'), "specular", "specular", Material)
+                            # if data["specular_texture"] is None:
+                                # data["specular_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Specular'), "specular", "specular", Material)
 
                         # 6.b Emissive color
+                            # need an emissive color node also
                             n_emissive_color = bsdf_node.inputs.get('Emissive Color')
                             # get the emissive color:
                             data["emissive_color"] = (bsdf_node.inputs.get('Emissive Color').default_value[0], bsdf_node.inputs.get('Emissive Color').default_value[1], bsdf_node.inputs.get('Emissive Color').default_value[2])
@@ -758,8 +785,8 @@ class MeshExportObject(ExportObject):
                             # get the texture:
                             if Material.fsxm_emissivetexture is not None:
                                 data["emissive_texture"] = Util.ReplaceFileNameExt(Material.fsxm_emissivetexture.name, bmpMat)
-                            if data["emissive_texture"] is None:
-                                data["emissive_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Emissive Color'), "emissive", "emissive", Material)
+                            # if data["emissive_texture"] is None:
+                                # data["emissive_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Emissive Color'), "emissive", "emissive", Material)
 
                             # check if the texture is a vcockpit gauge:
                             if Material.fsxm_vcpaneltex is True:
@@ -769,35 +796,27 @@ class MeshExportObject(ExportObject):
                     # 7. PBR-specific parameters:
                         elif Material.fsxm_material_mode == 'PBR':
                         # 7.a Metallic/smoothness map
+                            # ToDo: set the albedo color from node - diffuse above handles that??
+
+
                             if Material.fsxm_metallictexture is not None:
                                 data["metallic_texture"] = Util.ReplaceFileNameExt(Material.fsxm_metallictexture.name, bmpMat)
-                            if data["metallic_texture"] is None:
-                                data["metallic_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Metallic'), "metallic", "metallic", Material)
-                            data["metallic_value"] = bsdf_node.inputs.get('Metallic').default_value
-                            data["metallic_smoothness"] = 1 - bsdf_node.inputs.get('Roughness').default_value
+                            # if data["metallic_texture"] is None:
+                                # data["metallic_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Metallic'), "metallic", "metallic", Material)
+                            # ToDo: set the metallic factor and smoothness (1- roughness) from the nodes not bsdf
+                            data["metallic_value"] = metallic_node.outputs[0].default_value
+                            data["metallic_smoothness"] = smoothness_node.outputs[0].default_value
+                            #print("metallic", metallic_node, smoothness_node)
 
                         # 7.b Clearcoat/smoothness map
                             if Material.fsxm_clearcoattexture is not None:
                                 data["clearcoat_texture"] = Util.ReplaceFileNameExt(Material.fsxm_clearcoattexture.name, bmpMat)
-                            if data["clearcoat_texture"] is None:
-                                data["clearcoat_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Clearcoat'), "clearcoat", "clearcoat", Material)
-                                data["clearcoat_value"] = bsdf_node.inputs.get('Clearcoat').default_value
-                                data["clearcoat_smoothness"] = 1 - bsdf_node.inputs.get('Clearcoat Roughness').default_value
+                            # if data["clearcoat_texture"] is None:
+                                # data["clearcoat_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Clearcoat'), "clearcoat", "clearcoat", Material)
+                                # data["clearcoat_value"] = bsdf_node.inputs.get('Clearcoat').default_value
+                                # data["clearcoat_smoothness"] = 1 - bsdf_node.inputs.get('Clearcoat Roughness').default_value
 
-                        # 7.b Emissive color
-                            # get the specular color:
-                            data["emissive_color"] = (bsdf_node.inputs.get('Emission').default_value[0], bsdf_node.inputs.get('Emission').default_value[1], bsdf_node.inputs.get('Emission').default_value[2])
-
-                            # get the texture:
-                            if Material.fsxm_emissivetexture is not None:
-                                data["emissive_texture"] = Util.ReplaceFileNameExt(Material.fsxm_emissivetexture.name, bmpMat)
-                            if data["emissive_texture"] is None:
-                                data["emissive_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Emission'), "emissive", "emissive", Material)
-
-                            # check if the texture is a vcockpit gauge:
-                            if Material.fsxm_vcpaneltex is True:
-                                if data["emissive_texture"]:
-                                    data["emissive_texture"] = Path(data["emissive_texture"]).stem
+                        # ToDo: v6 Precipitation map
 
                 return data
 
@@ -807,9 +826,9 @@ class MeshExportObject(ExportObject):
                 Exporter.File.Write("Material {} {{\n".format(Util.SafeName(Material.name)))
                 Exporter.File.Indent()
                 Exporter.File.Write("{:9f};{:9f};{:9f};{:9f};;\n".format(data["diffuse_color"][0], data["diffuse_color"][1], data["diffuse_color"][2], data["diffuse_color"][3]))
-                Exporter.File.Write("1.000000;\n")  # specular power
+                Exporter.File.Write("{:9f};\n".format(data["power"]))  # specular power ToDo: use a power scale Specular Level scale
                 Exporter.File.Write("{:9F};{:9F};{:9F};;\n".format(data["specular_color"][0], data["specular_color"][1], data["specular_color"][2]))
-                Exporter.File.Write(" 0.000000; 0.000000; 0.000000;;\n")
+                Exporter.File.Write("{:9f};{:9f};{:9f};;\n".format(data["emissive_color"][0], data["emissive_color"][1], data["emissive_color"][2]))  # Emissive Color
                 if ((data["diffuse_texture"] is not None) and (data["diffuse_texture"] != "")):
                     Exporter.File.Write("TextureFilename {{\"{}\";}}\n".format(data["diffuse_texture"]))
                     Exporter.File.Write("DiffuseTextureFilename {{\"{}\";}}\n".format(data["diffuse_texture"]))
@@ -828,9 +847,11 @@ class MeshExportObject(ExportObject):
                     Exporter.File.Write("P3DMaterial {\n")
                 Exporter.File.Indent()
 
+                # ToDo: diffuse color and specular color are correct here - will be based pn new link structure with Diffuse Color, Specular Color
+                # Specular Level, glosiness, soften
                 Exporter.File.Write("{:9f};{:9f};{:9f};{:9f};;\n".format(data["diffuse_color"][0], data["diffuse_color"][1], data["diffuse_color"][2], data["diffuse_color"][3]))
                 Exporter.File.Write("{:9F};{:9F};{:9F};;\n".format(data["specular_color"][0], data["specular_color"][1], data["specular_color"][2]))
-                Exporter.File.Write("1.000000;\n")  # specular power
+                Exporter.File.Write("{:9f};\n".format(data["power"]))  # specular power (specular Level in P3D SDK??? goes to 999)
                 Exporter.File.Write("{:9f};{:9f};  // Detail and bump scales\n" .format(Material.fsxm_detailscale, Material.fsxm_bumpscale))
                 Exporter.File.Write("{:9f};   // Reflection scale\n" .format(Material.fsxm_refscale))
                 Exporter.File.Write("%i;            // Use global env\n" % (Material.fsxm_globenv))
@@ -1047,6 +1068,7 @@ class MeshExportObject(ExportObject):
         if not Materials.keys():
             return
 
+        print(" Mesh", Mesh.name)
         self.Exporter.File.Write("MeshMaterialList {{ // {} material list\n".
                                  format(self.SafeName))
         self.Exporter.File.Indent()

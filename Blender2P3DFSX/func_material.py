@@ -69,6 +69,7 @@ class MaterialError(Exception):
 
 
 class MaterialUtil():
+
     def MakeOpaque(Material):
         Material.blend_method = 'OPAQUE'
 
@@ -86,6 +87,7 @@ class MaterialUtil():
         material = bpy.data.materials.get(name)
         material.use_nodes = True
         nodes = Material.node_tree.nodes
+        links = Material.node_tree.links
         for idx, node in enumerate(nodes):
             print("Deleting: %s | %s" % (node.name, node.type))
             nodes.remove(node)
@@ -106,8 +108,7 @@ class MaterialUtil():
                 raise MaterialError(msg)
             return new_node
 
-        nodes = Material.node_tree.nodes
-        links = Material.node_tree.links
+        #nodes = Material.node_tree.nodes
 
         output_node = None
 
@@ -121,8 +122,26 @@ class MaterialUtil():
         spec_shader_node.inputs["Clear Coat Roughness"].hide = True
         spec_shader_node.inputs["Clear Coat Normal"].hide = True
 
-        # Create the base color
-        base_color_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Diffuse", location=(-1000, 640))
+        # Create the base color Diffuse texture
+        base_color_texture_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Diffuse", location=(-1000, 640))
+        # ToDo: specular diffuse color node needed
+
+        # ToDo: PBR albedo color node needed
+        # create the base color node: added ronh
+        diffuse_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Diffuse Color", location=(-850, 1040))
+        diffuse_color_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Diffuse Color Blend", location=(-350, 760))
+        diffuse_color_blend_node.blend_type = 'MULTIPLY'
+        diffuse_color_blend_node.inputs["Fac"].default_value = 1.0
+        diffuse_color_blend_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
+        specular_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Specular Color", location=(-475, -240))
+        specular_color_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Specular Color Blend", location=(-25, -300))
+        specular_color_blend_node.blend_type = 'MULTIPLY'
+        specular_color_blend_node.inputs["Fac"].default_value = 1.0
+        specular_color_blend_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
+
+        # ToDo: Specular - Specular Level nodes needed - specular factor or Power???  (Glossiness and Soften is not used???)
+        # Specular nodes
+        power_node = CreateNewNode(Material, 'ShaderNodeValue', "Power Factor", location=(-250, -150))
 
         # create the detail maps nodes:
         detail_scale_node = CreateNewNode(Material, 'ShaderNodeMapping', 'Detail Scale', location=(-1250, 300))
@@ -135,15 +154,15 @@ class MaterialUtil():
         detail_scale_node.parent = detail_nodes_frame
         texture_detail_map_node.parent = detail_nodes_frame
 
-        detail_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', 'Detail Blend', location=(-500, 470))
+        detail_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', 'Detail Blend', location=(-150, 375))
         detail_blend_node.blend_type = 'OVERLAY'
         detail_blend_node.inputs["Fac"].default_value = 0
 
         # transparency
         inv_alpha_node = CreateNewNode(Material, 'ShaderNodeInvert', "Transparency", location=(-500, 200))
 
-        # specular color
-        spec_color_node = CreateNewNode(Material, 'ShaderNodeTexImage', "specular", location=(-1000, -120))     # "specular" name cannot be capitalized. Node will not connect to BSDF shader.  Dave_W
+        # specular color texture
+        spec_color_texture_node = CreateNewNode(Material, 'ShaderNodeTexImage', "specular", location=(-1000, -120))     # "specular" name cannot be capitalized. Node will not connect to BSDF shader.  Dave_W
 
         # create the emission node:
         emission_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Emissive", location=(-1000, -420))
@@ -173,22 +192,34 @@ class MaterialUtil():
         # connect the nodes:
         # 22/01/23 reversed the order of connections e.g., outputs on left, inputs on right of statement.    Dave_W
 
+        # ToDo: redo default links when no textures are added, this requires the Diffuse Color, and Albedo color nodes
+        # the metallic factors, smoothness factor (1 - Roughness), Specular level, Glossiness and Soften
+        # see the P3D SDK Modeling Materials, PBR Materilas sections, References/variables/Material Variables
+
         links.new(spec_shader_node.outputs["BSDF"], output_node.inputs["Surface"])
 
-        links.new(base_color_node.outputs["Color"], detail_blend_node.inputs["Color1"])
+        links.new(base_color_texture_node.outputs["Color"], detail_blend_node.inputs["Color1"])
 
-        links.new(base_color_node.outputs["Alpha"], inv_alpha_node.inputs["Color"])
+        links.new(base_color_texture_node.outputs["Alpha"], inv_alpha_node.inputs["Color"])
 
-        links.new(detail_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
+        #move to update
+        #links.new(detail_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
+        #links.new(inv_alpha_node.outputs["Color"], spec_shader_node.inputs["Transparency"])
 
-        links.new(inv_alpha_node.outputs["Color"], spec_shader_node.inputs["Transparency"])
+        links.new(diffuse_color_node.outputs["Color"], diffuse_color_blend_node.inputs["Color1"])
+        links.new(diffuse_color_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
 
         # connect detail texture map
         links.new(texture_detail_map_node.outputs["Color"], detail_blend_node.inputs["Color2"])
         links.new(detail_scale_node.outputs["Vector"], texture_detail_map_node.inputs["Vector"])
         links.new(uv_node.outputs["UV"], detail_scale_node.inputs["Vector"])
 
-        links.new(spec_color_node.outputs["Color"], spec_shader_node.inputs["Specular"])
+        # move to update
+        #links.new(spec_color_texture_node.outputs["Color"], spec_shader_node.inputs["Specular"])
+
+        links.new(specular_color_blend_node.outputs["Color"], spec_shader_node.inputs["Specular"])
+        links.new(specular_color_node.outputs["Color"], specular_color_blend_node.inputs["Color1"])
+        links.new(power_node.outputs["Value"], specular_color_blend_node.inputs["Fac"])
 
         links.new(texture_normal_map_node.outputs["Color"], sep_rgb_node.inputs["Image"])
         links.new(texture_normal_map_node.outputs["Alpha"], com_rgb_node.inputs["R"])
@@ -197,11 +228,12 @@ class MaterialUtil():
         links.new(com_rgb_node.outputs["Image"], mix_normal_node.inputs["Color2"])
         links.new(texture_normal_map_node.outputs["Color"], mix_normal_node.inputs["Color1"])
         links.new(mix_normal_node.outputs["Color"], normal_map_node.inputs["Color"])
-        links.new(normal_map_node.outputs["Normal"], spec_shader_node.inputs["Normal"])
+        # move to update
+        #links.new(normal_map_node.outputs["Normal"], spec_shader_node.inputs["Normal"])
 
         # connect flip image to image:
-        links.new(uv_node.outputs["UV"], base_color_node.inputs["Vector"])
-        links.new(uv_node.outputs["UV"], spec_color_node.inputs["Vector"])
+        links.new(uv_node.outputs["UV"], base_color_texture_node.inputs["Vector"])
+        links.new(uv_node.outputs["UV"], spec_color_texture_node.inputs["Vector"])
         links.new(uv_node.outputs["UV"], emission_node.inputs["Vector"])
         links.new(bump_scale_node.outputs["Vector"], texture_normal_map_node.inputs["Vector"])
         links.new(uv_node.outputs["UV"], bump_scale_node.inputs["Vector"])
@@ -256,8 +288,17 @@ class MaterialUtil():
         # create the main BSDF node:
         bsdf_node = CreateNewNode(Material, 'ShaderNodeBsdfPrincipled', location=(200, 100))
 
-        # create the base color node:
-        base_color_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Diffuse", location=(-1450, 640))
+        # create the base color texture node: renamed ronh
+        base_color_texture_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Albedo", location=(-1150, 900))
+
+        # ToDo: PBR albedo color node needed
+        # create the base color node: added ronh
+        base_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Base Color", location=(-850, 1240))
+        base_color_mix_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Base Color Mix", location=(-650, 760))
+        base_color_mix_node.blend_type = 'MULTIPLY'
+        base_color_mix_node.inputs["Color1"].default_value = (1.0, 1.0, 1.0, 1.0)
+        base_color_mix_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
+        base_color_mix_node.inputs["Fac"].default_value = 1.0
 
         # create the detail maps nodes
         detail_scale_node = CreateNewNode(Material, 'ShaderNodeMapping', 'Detail Scale', location=(-1650, 300))
@@ -270,26 +311,37 @@ class MaterialUtil():
         detail_scale_node.parent = detail_nodes_frame
         texture_detail_map_node.parent = detail_nodes_frame
 
-        detail_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', 'Detail Blend', location=(-850, 300))
+        detail_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', 'Detail Blend', location=(-400, 500))
         detail_blend_node.blend_type = 'OVERLAY'
         detail_blend_node.inputs["Fac"].default_value = 0
 
+        # ToDo: PBR metallic scale and smoothness scale (1 - Roughness) nodes needed
+
         # create the metallic/smoothness/occlusion texture and operation
         texture_metallic_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Metallic", location=(-1450, -150))
+        metallic_factor_node = CreateNewNode(Material, 'ShaderNodeValue', "Metallic Factor", location=(-850, -50))
         rgb_separate_node = CreateNewNode(Material, 'ShaderNodeSeparateRGB', "Separate Red", location=(-850, -150))
-        rgb_separate_node.outputs["G"].hide = True
-        rgb_separate_node.outputs["B"].hide = True
+        #rgb_separate_node.outputs["G"].hide = True
+        #rgb_separate_node.outputs["B"].hide = True
 
         # create an inverse for the smoothness/roughness input:
-        math_node_smoothness = CreateNewNode(Material, 'ShaderNodeInvert', "Metallic Roughness", location=(-850, -310))
-        math_node_smoothness.inputs["Fac"].default_value = 1
+        #math_node_smoothness = CreateNewNode(Material, 'ShaderNodeInvert', "Metallic Roughness", location=(-850, -310))
+        #math_node_smoothness.inputs["Fac"].default_value = 1
+        smoothness_factor_node = CreateNewNode(Material, 'ShaderNodeValue', "Smoothness Factor", location=(-850, -440))
+        smoothness_math_node = CreateNewNode(Material, 'ShaderNodeMath', "Invert 1 minus", location=(-550, -210))
+        smoothness_math_node.operation = 'SUBTRACT'
+        smoothness_math_node.inputs[1].default_value = 1.0
+        smoothness_math_node.use_clamp = True
 
         # put metallic nodes in frame:        Dave_W
         metallic_frame = nodes.new(type='NodeFrame')
         metallic_frame.label = 'Metallic'
         texture_metallic_node.parent = metallic_frame
         rgb_separate_node.parent = metallic_frame
-        math_node_smoothness.parent = metallic_frame
+        #math_node_smoothness.parent = metallic_frame
+        smoothness_math_node.parent = metallic_frame
+        smoothness_factor_node.parent = metallic_frame
+        metallic_factor_node.parent = metallic_frame
 
         # create the emission node:
         emission_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Emissive", location=(-1450, -480))
@@ -339,24 +391,43 @@ class MaterialUtil():
         # connect the nodes:
         # 22/01/23 reversed the order of connections e.g., outputs on left, inputs on right of statement.    Dave_W
 
+        # ToDo: redo default links when no textures are added, this requires the Diffuse Color, and Albedo color nodes
+        # the metallic factors, smoothness factor (1 - Roughness), Specular level, Glossiness and Soften
+        # see the P3D SDK Modeling Materials, PBR Materilas sections, References/variables/Material Variables
+
+        # ToDo: rework this so the color nodes are added and mix nodes etc. Like MSFS
+        # Base color albedo, specular color, diffuse color, specular level scale (Power), metallic scale, smoothness scale, emissive color
         # BSDF
         links.new(bsdf_node.outputs["BSDF"], output_node.inputs["Surface"])
-        links.new(base_color_node.outputs["Alpha"], bsdf_node.inputs["Alpha"])
+        # ToDo: move to base color texture update
+        #links.new(base_color_texture_node.outputs["Alpha"], bsdf_node.inputs["Alpha"])
 
         # detail texture map
-        links.new(detail_blend_node.outputs["Color"], bsdf_node.inputs["Base Color"])
-        links.new(base_color_node.outputs["Color"], detail_blend_node.inputs["Color1"])
+        # ToDo: move to detail/base color texture update
+        #links.new(detail_blend_node.outputs["Color"], bsdf_node.inputs["Base Color"])
+        # keep
+        links.new(base_color_node.outputs["Color"], base_color_mix_node.inputs["Color2"]) # added ronh
+        links.new(base_color_mix_node.outputs["Color"], detail_blend_node.inputs["Color1"])
+        links.new(base_color_mix_node.outputs["Color"], bsdf_node.inputs["Base Color"])
         links.new(texture_detail_map_node.outputs["Color"], detail_blend_node.inputs["Color2"])
         links.new(detail_scale_node.outputs["Vector"], texture_detail_map_node.inputs["Vector"])
         links.new(uv_node.outputs["UV"], detail_scale_node.inputs["Vector"])
 
         # metallic
+        # keep
         links.new(texture_metallic_node.outputs["Color"], rgb_separate_node.inputs["Image"])
-        links.new(rgb_separate_node.outputs["R"], bsdf_node.inputs["Metallic"])
-        links.new(texture_metallic_node.outputs["Alpha"], math_node_smoothness.inputs["Color"])
-        links.new(math_node_smoothness.outputs["Color"], bsdf_node.inputs["Roughness"])
+        #links.new(texture_metallic_node.outputs["Alpha"], math_node_smoothness.inputs["Color"])
+        links.new(smoothness_factor_node.outputs["Value"], smoothness_math_node.inputs[1]) # added ronh second Value input for 1 minus
+        links.new(metallic_factor_node.outputs["Value"], bsdf_node.inputs["Metallic"]) # added ronh
+        links.new(smoothness_math_node.outputs["Value"], bsdf_node.inputs["Roughness"]) # added ronh
+        # ToDo: move to update metallic texture
+        #links.new(rgb_separate_node.outputs["R"], bsdf_node.inputs["Metallic"])
+        #links.new(math_node_smoothness.outputs["Color"], bsdf_node.inputs["Roughness"])
 
         # normal
+        # ToDo: normal update
+        #links.new(normal_map_node.outputs["Normal"], bsdf_node.inputs["Normal"])
+        # keep
         links.new(texture_normal_map_node.outputs["Color"], sep_rgb_node.inputs["Image"])
         links.new(texture_normal_map_node.outputs["Alpha"], com_rgb_node.inputs["R"])
         links.new(texture_normal_map_node.outputs["Color"], mix_normal_node.inputs["Color1"])
@@ -364,22 +435,23 @@ class MaterialUtil():
         links.new(sep_rgb_node.outputs["B"], com_rgb_node.inputs["B"])
         links.new(com_rgb_node.outputs["Image"], mix_normal_node.inputs["Color2"])
         links.new(mix_normal_node.outputs["Color"], normal_map_node.inputs["Color"])
-        links.new(normal_map_node.outputs["Normal"], bsdf_node.inputs["Normal"])
 
         # clearcoat             Dave_W
+        # ToDo: add to clearcoat update
+        #links.new(sep_color_node.outputs["Red"], bsdf_node.inputs["Clearcoat"])
+        #links.new(cc_node_smoothness.outputs["Color"], bsdf_node.inputs["Clearcoat Roughness"])
+        #links.new(cc_normal_map_node.outputs["Normal"], bsdf_node.inputs["Clearcoat Normal"])
+        #keep
         links.new(texture_clear_coat_node.outputs["Color"], sep_color_node.inputs["Color"])
-        links.new(sep_color_node.outputs["Red"], bsdf_node.inputs["Clearcoat"])
         links.new(sep_color_node.outputs["Green"], cc_node_smoothness.inputs["Color"])
-        links.new(cc_node_smoothness.outputs["Color"], bsdf_node.inputs["Clearcoat Roughness"])
         links.new(texture_clear_coat_node.outputs["Alpha"], cc_com_rgb_node.inputs["G"])
         links.new(sep_color_node.outputs["Blue"], cc_com_rgb_node.inputs["R"])
         links.new(sep_color_node.outputs["Blue"], cc_mix_normal_node.inputs["Color1"])
         links.new(cc_com_rgb_node.outputs["Image"], cc_mix_normal_node.inputs["Color2"])
         links.new(cc_mix_normal_node.outputs["Color"], cc_normal_map_node.inputs["Color"])
-        links.new(cc_normal_map_node.outputs["Normal"], bsdf_node.inputs["Clearcoat Normal"])
 
         # connect flip image to image:
-        links.new(uv_node.outputs["UV"], base_color_node.inputs["Vector"])
+        links.new(uv_node.outputs["UV"], base_color_texture_node.inputs["Vector"])
         links.new(uv_node.outputs["UV"], texture_metallic_node.inputs["Vector"])
         links.new(uv_node.outputs["UV"], emission_node.inputs["Vector"])
         links.new(bump_scale_node.outputs["Vector"], texture_normal_map_node.inputs["Vector"])
