@@ -206,7 +206,7 @@ class Environment():
             mat.fsxm_EmissiveColor = (0.0, 0.0, 0.0, 1.0)
             mat.fsxm_metallic_scale = 0
             mat.fsxm_smoothness_scale = 1
-            mat.fsxm_power_scale = 1
+            mat.fsxm_power_scale = 50
 
             # Textures
             mat.fsxm_diffusetexture = None
@@ -792,7 +792,7 @@ class Environment():
     Material.fsxm_EmissiveColor = FloatVectorProperty(name="EmissiveColor", subtype="COLOR", size=4, min=0.0, max=1.0, default=(0.0, 0.0, 0.0, 1.0), update=setEmissiveColor)
     Material.fsxm_metallic_scale = FloatProperty(name="Metallic_scale", default=0, min=0, max=1.0, update=setMetallicScale)
     Material.fsxm_smoothness_scale = FloatProperty(name="Smoothness_scale", default=1, min=0, max=1.0, update=setSmoothnessScale)
-    Material.fsxm_power_scale = FloatProperty(name="Power_scale", default=1, min=0, max=999, update=setPowerScale)
+    Material.fsxm_power_scale = FloatProperty(name="Specular Level (Power scale)", default=1, min=0, max=100, update=setPowerScale)
 
     # Textures
     Material.fsxm_diffusetexture = PointerProperty(type=Image, name="diffuse map", update=matchdiffuse)
@@ -866,7 +866,7 @@ class Environment():
     Material.fsxm_bledif = BoolProperty(name="Blend env by inverse of diffuse alpha", default=False)
     Material.fsxm_blespec = BoolProperty(name="Blend env by specular map alpha", default=False)
     Material.fsxm_refscale = FloatProperty(name="Reflection scale", default=0, min=0.0, max=100)    # 19/03/2023 changed name to Reflection scale to be the same as in 3DS and MCX  Dave_W
-    Material.fsxm_specscale = IntProperty(name="Specular map power scale", default=64, min=0, max=256)
+    Material.fsxm_specscale = IntProperty(name="Specular map power scale", default=64, min=0, max=255)
     Material.fsxm_globenv = BoolProperty(name="Use global environment map", default=True)
     Material.fsxm_environmentmap = PointerProperty(type=Image, name="Custom environment map", update=switch_environmentmap)
 

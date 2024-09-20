@@ -847,8 +847,8 @@ class MeshExportObject(ExportObject):
                     Exporter.File.Write("P3DMaterial {\n")
                 Exporter.File.Indent()
 
-                # ToDo: diffuse color and specular color are correct here - will be based pn new link structure with Diffuse Color, Specular Color
-                # Specular Level, glosiness, soften
+                # ToDo: diffuse color and specular color are correct here - will be based on new link structure with Diffuse Color, Specular Color
+                # Specular Level, glosiness?, soften?
                 Exporter.File.Write("{:9f};{:9f};{:9f};{:9f};;\n".format(data["diffuse_color"][0], data["diffuse_color"][1], data["diffuse_color"][2], data["diffuse_color"][3]))
                 Exporter.File.Write("{:9F};{:9F};{:9F};;\n".format(data["specular_color"][0], data["specular_color"][1], data["specular_color"][2]))
                 Exporter.File.Write("{:9f};\n".format(data["power"]))  # specular power (specular Level in P3D SDK??? goes to 999)

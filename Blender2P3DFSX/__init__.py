@@ -22,6 +22,9 @@
 # Further enhancement to the material workflow were coded by:
 #   David Hoeffgen (2020)
 #
+# Further enhancement to the material workflow were coded by:
+#   Ron Haertel (2024)
+#
 # For information on how to use the addon, please visit:
 # https://www.fsdeveloper.com/wiki/index.php?title=Blender2P3D/FSX
 #
@@ -63,7 +66,7 @@ bl_info = {
     "author": "Various members of fsdeveloper.com",
     "description": "These tools were developed by members of the fsdeveloper.com community. Felix Owono-Ateba, Ron Haertel, Kris Pyatt (2017), Manochvarma Raman (2018), Otmar Nitsche (2020), David Hoeffgen (2020)",
     "blender": (3, 3, 0),
-    "version": (1, 0, 21),
+    "version": (1, 0, 23),
     "location": "View3D",
     "warning": "",
     "category": "3D View",

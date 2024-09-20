@@ -12,7 +12,7 @@
 #   Manochvarma Raman (2018)
 #
 # This current incarnation of the addon uses most of the original algorithms,
-# but with an updated UI and compatibility for Blender 2.8x. Parts of the
+# but with an updated UI and compatibility for Blender 3.3.x. Parts of the
 # original exporter script have been re-written to accommodate Blender's new
 # material workflow and to add PBR support to the addon (P3D v4.4+/v5 only).
 #
@@ -22,6 +22,8 @@
 # Further enhancement to the material workflow were coded by:
 #   David Hoeffgen (2020)
 #
+# Further enhancement to the material workflow were coded by:
+#   Ron Haertel (2024)
 # For information on how to use the addon, please visit:
 # https://www.fsdeveloper.com/wiki/index.php?title=Blender2P3D/FSX
 #
@@ -129,6 +131,7 @@ class MaterialUtil():
         # ToDo: PBR albedo color node needed
         # create the base color node: added ronh
         diffuse_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Diffuse Color", location=(-850, 1040))
+        diffuse_color_node.outputs[0].default_value = (0.6, 0.6, 0.6, 1.0)
         diffuse_color_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Diffuse Color Blend", location=(-350, 760))
         diffuse_color_blend_node.blend_type = 'MULTIPLY'
         diffuse_color_blend_node.inputs["Fac"].default_value = 1.0
@@ -294,6 +297,7 @@ class MaterialUtil():
         # ToDo: PBR albedo color node needed
         # create the base color node: added ronh
         base_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Base Color", location=(-850, 1240))
+        base_color_node.outputs[0].default_value = (0.6, 0.6, 0.6, 1.0)
         base_color_mix_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Base Color Mix", location=(-650, 760))
         base_color_mix_node.blend_type = 'MULTIPLY'
         base_color_mix_node.inputs["Color1"].default_value = (1.0, 1.0, 1.0, 1.0)

@@ -137,6 +137,7 @@ class FSXMaterial(bpy.types.Panel):
                     subbox.prop(mat, 'fsxm_DiffuseColor')
                     subbox.label(text="Specular Color", icon='TEXTURE')
                     subbox.prop(mat, 'fsxm_SpecularColor')
+                    subbox.label(text="Specular Highlights", icon='TEXTURE')
                     subbox.prop(mat, 'fsxm_power_scale')
                     subbox = box.box()
                     subbox.label(text="Emissive Color", icon='TEXTURE') # no PBR emissive  ... yet?
@@ -351,11 +352,11 @@ class FSXMaterial(bpy.types.Panel):
                 subbox.prop(mat, 'fsxm_bldspec')
                 subbox.prop(mat, 'fsxm_bledif')
                 subbox.prop(mat, 'fsxm_blespec')
-                subbox.prop(mat, 'fsxm_refscale')
-                subbox.prop(mat, 'fsxm_specscale')
                 subbox.prop(mat, 'fsxm_globenv')
                 subbox.label(text="Custom environment map:")
                 subbox.template_ID(mat, "fsxm_environmentmap", new="image.new", open="image.open")
+                subbox.prop(mat, 'fsxm_refscale')
+                subbox.prop(mat, 'fsxm_specscale')
                 # ToDo: Environmentmapscale - already refscale (Reflection Scale in P3D SDK) - SPECULAR
 
                 subbox = box.box()
