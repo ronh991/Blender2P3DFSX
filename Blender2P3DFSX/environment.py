@@ -422,11 +422,15 @@ class Environment():
             pass
 
     def setBaseColor(self, context):
+        # PBR
         mat = context.active_object.active_material
 
         if mat.node_tree.nodes.get("Base Color", None) is not None:
             mat.node_tree.nodes["Base Color"].outputs[0].default_value = mat.fsxm_BaseColor
-
+        # Alpha too
+        if mat.node_tree.nodes.get("Alpha Value", None) is not None:
+            mat.node_tree.nodes["Alpha Value"].outputs[0].default_value = mat.fsxm_BaseColor[3]
+        
     def setEmissiveColor(self, context):
         mat = context.active_object.active_material
 
@@ -437,10 +441,14 @@ class Environment():
             mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value = mat.fsxm_EmissiveColor
 
     def setDiffuseColor(self, context):
+        # Specular
         mat = context.active_object.active_material
 
         if mat.node_tree.nodes.get("Diffuse Color", None) is not None:
             mat.node_tree.nodes["Diffuse Color"].outputs[0].default_value = mat.fsxm_DiffuseColor
+        # Alpha too
+        if mat.node_tree.nodes.get("Alpha Value", None) is not None:
+            mat.node_tree.nodes["Alpha Value"].outputs[0].default_value = mat.fsxm_DiffuseColor[3]
 
     def setSpecularColor(self, context):
         mat = context.active_object.active_material
@@ -448,11 +456,11 @@ class Environment():
         if mat.node_tree.nodes.get("Specular Color", None) is not None:
             mat.node_tree.nodes["Specular Color"].outputs[0].default_value = mat.fsxm_SpecularColor
 
-    def setMetallicScale(self, context):
-        mat = context.active_object.active_material
+    # def setMetallicScale(self, context):
+        # mat = context.active_object.active_material
 
-        if mat.node_tree.nodes.get("Metallic Factor", None) is not None:
-            mat.node_tree.nodes["Metallic Factor"].outputs[0].default_value = mat.fsxm_metallic_scale
+        # if mat.node_tree.nodes.get("Metallic Factor", None) is not None:
+            # mat.node_tree.nodes["Metallic Factor"].outputs[0].default_value = mat.fsxm_metallic_scale
 
     def setSmoothnessScale(self, context):
         mat = context.active_object.active_material

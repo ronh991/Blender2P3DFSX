@@ -68,6 +68,7 @@ from . environment import *
 class FSXSetOpaque(bpy.types.Operator):
     bl_idname = "fsx.set_opaque"
     bl_label = "Set Default Opaque"
+    bl_description = "Sets BLENDER Blend Method to Opaque"
 
     def execute(self, context):
         mat = context.active_object.active_material
@@ -80,6 +81,7 @@ class FSXSetOpaque(bpy.types.Operator):
 class FSXSetTransparent(bpy.types.Operator):
     bl_idname = "fsx.set_transparent"
     bl_label = "Set Default Transparent"
+    bl_description = "Sets BLENDER Blend Method to Blend"
 
     def execute(self, context):
         mat = context.active_object.active_material

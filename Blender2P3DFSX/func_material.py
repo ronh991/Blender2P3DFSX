@@ -82,7 +82,7 @@ class MaterialUtil():
     def MakeTranslucent(Material):
         Material.blend_method = 'BLEND'
         Material.use_backface_culling = True
-
+        
     def CreateSpecShader(Material):
         # Deleted RemoveShaderNodes function to allow location control of spec_shader_node and output_node. 20-02-2023     Dave_W
         name = bpy.context.active_object.active_material.name
@@ -110,6 +110,32 @@ class MaterialUtil():
                 raise MaterialError(msg)
             return new_node
 
+        def CreateAlpha(Material):
+            value_node = None
+            math_node = None
+            links = Material.node_tree.links
+            try:
+                value_node = Material.node_tree.nodes.new('ShaderNodeValue')
+                value_node.name = "Alpha Value"
+                value_node.label = "Alpha Value"
+                value_node.location = location=(-650, 1040)
+                value_node.outputs[0].default_value = 1.0
+            finally:
+                pass
+
+            try:
+                math_node = Material.node_tree.nodes.new('ShaderNodeMath')
+                math_node.name = "One Minus Alpha"
+                math_node.label = "One Minus Alpha"
+                math_node.operation = "SUBTRACT"
+                math_node.location = location=(-450, 1040)
+                math_node.inputs[0].default_value = 1.0
+            finally:
+                pass
+
+            links.new(value_node.outputs[0], math_node.inputs[1])
+            return math_node
+
         #nodes = Material.node_tree.nodes
 
         output_node = None
@@ -136,6 +162,7 @@ class MaterialUtil():
         diffuse_color_blend_node.blend_type = 'MULTIPLY'
         diffuse_color_blend_node.inputs["Fac"].default_value = 1.0
         diffuse_color_blend_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
+        math_node = CreateAlpha(Material)
         specular_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Specular Color", location=(-475, -240))
         specular_color_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Specular Color Blend", location=(-25, -300))
         specular_color_blend_node.blend_type = 'MULTIPLY'
@@ -207,7 +234,7 @@ class MaterialUtil():
 
         #move to update
         #links.new(detail_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
-        #links.new(inv_alpha_node.outputs["Color"], spec_shader_node.inputs["Transparency"])
+        links.new(math_node.outputs["Value"], spec_shader_node.inputs["Transparency"])
 
         links.new(diffuse_color_node.outputs["Color"], diffuse_color_blend_node.inputs["Color1"])
         links.new(diffuse_color_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
@@ -279,6 +306,20 @@ class MaterialUtil():
                 raise MaterialError(msg)
             return new_node
 
+        def CreateAlpha(Material):
+            value_node = None
+            links = Material.node_tree.links
+            try:
+                value_node = Material.node_tree.nodes.new('ShaderNodeValue')
+                value_node.name = "Alpha Value"
+                value_node.label = "Alpha Value"
+                value_node.location = location=(-850, 1040)
+                value_node.outputs[0].default_value = 1.0
+            finally:
+                pass
+
+            return value_node
+
         nodes = Material.node_tree.nodes
         links = Material.node_tree.links
 
@@ -298,11 +339,13 @@ class MaterialUtil():
         # create the base color node: added ronh
         base_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Base Color", location=(-850, 1240))
         base_color_node.outputs[0].default_value = (0.6, 0.6, 0.6, 1.0)
+        alpha_value_node = CreateAlpha(Material)
         base_color_mix_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Base Color Mix", location=(-650, 760))
         base_color_mix_node.blend_type = 'MULTIPLY'
         base_color_mix_node.inputs["Color1"].default_value = (1.0, 1.0, 1.0, 1.0)
         base_color_mix_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
         base_color_mix_node.inputs["Fac"].default_value = 1.0
+
 
         # create the detail maps nodes
         detail_scale_node = CreateNewNode(Material, 'ShaderNodeMapping', 'Detail Scale', location=(-1650, 300))
@@ -411,6 +454,7 @@ class MaterialUtil():
         #links.new(detail_blend_node.outputs["Color"], bsdf_node.inputs["Base Color"])
         # keep
         links.new(base_color_node.outputs["Color"], base_color_mix_node.inputs["Color2"]) # added ronh
+        links.new(alpha_value_node.outputs["Value"], bsdf_node.inputs["Alpha"])
         links.new(base_color_mix_node.outputs["Color"], detail_blend_node.inputs["Color1"])
         links.new(base_color_mix_node.outputs["Color"], bsdf_node.inputs["Base Color"])
         links.new(texture_detail_map_node.outputs["Color"], detail_blend_node.inputs["Color2"])
