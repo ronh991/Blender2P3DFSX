@@ -100,8 +100,8 @@ class ExportFSX(Operator, ExportHelper):
     )
 
     ExportSkinWeights: BoolProperty(
-        name="Skinned mesh",
-        description="Export skinned animations",
+        name="Skinned Mesh - Vertex Grouped Armatures",
+        description="Export skinned or piston animations - All armatures should be vertex grouped",
         default=False
     )
 
@@ -147,6 +147,13 @@ class ExportFSX(Operator, ExportHelper):
         name="Write to File",
         description="The write to file command is adding an additional step to the export to flush the memory. Use only if you experience OOM errors.",
         default=False
+    )
+
+    # Armature pose or rest position (Ron H)
+    ExportBonePosition: StringProperty(
+        name="Armature Rest or Pose Position",
+        description="Armature REST or POSE position",
+        default='POSE'
     )
 
     def draw(self, context):

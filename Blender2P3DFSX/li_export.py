@@ -525,7 +525,6 @@ class MeshExportObject(ExportObject):
             # This new function will analyse the Material nodes to populate texture file names
             # and values as closely to the Blender Render as possible. ON
             def AnalyzeMaterial(parent, Material):
-                print(" Analyse Material", Material.name, "\r\n")
                 # This function is going through all input node of the parameter <node>, until it finds a node of type <node_type>
                 # The function will call itself on every non-texture-image nodes to crawl through the whole tree of nodes and links.
                 # If <selected_input_node> is passed with a value != -1, ONLY that input slot is being analyzed.
@@ -670,7 +669,8 @@ class MeshExportObject(ExportObject):
                     #precipitation_texture=None,
                 )
 
-                if (Material):
+                if (Material is not None):
+                    print(" Analyse Material", "None" if Material is None else Material.name, "\r\n")
                     # let's catch a problem first. The exporter only works if you use either spec or pbr material.
                     if ((Material.fsxm_material_mode != 'FSX') and (Material.fsxm_material_mode != 'PBR')):
                         msg = format("EXPORT ERROR! The material <%s> is neither FSX nor PBR material!" % Material.name)
@@ -822,7 +822,7 @@ class MeshExportObject(ExportObject):
 
             data = AnalyzeMaterial(self, Material)
 
-            if (Material.fsxm_material_mode == 'FSX'):
+            if ((Material is not None) and (Material.fsxm_material_mode == 'FSX')):
                 Exporter.File.Write("Material {} {{\n".format(Util.SafeName(Material.name)))
                 Exporter.File.Indent()
                 Exporter.File.Write("{:9f};{:9f};{:9f};{:9f};;\n".format(data["diffuse_color"][0], data["diffuse_color"][1], data["diffuse_color"][2], data["diffuse_color"][3]))
@@ -992,7 +992,7 @@ class MeshExportObject(ExportObject):
                 Exporter.File.Unindent()
                 Exporter.File.Write("} // End of Material\n")
 
-            elif (Material.fsxm_material_mode == 'PBR'):
+            elif ((Material is not None) and (Material.fsxm_material_mode == 'PBR')):
                 Exporter.File.Write("PBRMaterial {} {{\n".format(Util.SafeName(Material.name)))
                 Exporter.File.Indent()
                 Exporter.File.Write("{:9f};{:9f};{:9f};{:9f};;\n".format(data["diffuse_color"][0], data["diffuse_color"][1], data["diffuse_color"][2], data["diffuse_color"][3]))
@@ -1240,6 +1240,8 @@ class ArmatureExportObject(ExportObject):
 
         Armature = self.BlenderObject.data
         RootBones = [Bone for Bone in Armature.bones if Bone.parent is None]
+        print("Armature pose position", Armature.pose_position)
+        self.config.ExportBonePosition = Armature.pose_position
         self.Exporter.log.log("Writing frames for armature bones...", False, True)
         self.__WriteBones(RootBones)
         self.Exporter.log.log("Done", False, True)
@@ -1346,9 +1348,11 @@ class BoneExportObject(ExportObject):
 
     def _MatrixCompute(self):
         Bone = self.BlenderObject
-        Armature = self.ParentArmature
-        PoseBone = Armature.pose.bones[Bone.name]
-        self.Matrix_local = Armature.matrix_world
+        MatrixArmature = self.ParentArmature
+        print("Armature bone pose position", MatrixArmature, MatrixArmature.data.pose_position)
+        self.config.ExportBonePosition = MatrixArmature.data.pose_position
+        PoseBone = MatrixArmature.pose.bones[Bone.name]
+        self.Matrix_local = MatrixArmature.matrix_world
 
         if self.config.ExportBonePosition == 'REST':
             if Bone.parent:
@@ -1565,6 +1569,7 @@ class BoneAnimationGenerator(AnimationGenerator):
         Bone = self.ExportObject.BlenderObject
         if not Bone.fsx_anim_tag:
             return
+        print("_GenerateBoneKeys found animation tag", Bone.fsx_anim_tag)
         Scene = bpy.context.scene
         BlenderCurrentFrame = Scene.frame_current
         Scene.frame_set(0)
@@ -1581,11 +1586,13 @@ class BoneAnimationGenerator(AnimationGenerator):
         Translation_base = Matrix_base.to_translation()
 
         if PoseBone.constraints:
+            print("_GenerateBoneKeys - PoseBone.Constraints")
             root = self.modeldefTree.getroot()
             animtag = root.find(".Animation[@name='%s']" % (Bone.fsx_anim_tag))
             try:
                 framerange = int(animtag.attrib['length'])
             except KeyError:
+                print("_GenerateBoneKeys KeyError")
                 for fcu in Armature.animation_data.action.fcurves:
                     if fcu.data_path.split('"')[1] == Bone.name:
                         if framerange < fcu.range()[1]:
@@ -1593,7 +1600,8 @@ class BoneAnimationGenerator(AnimationGenerator):
             BoneAnimation.KeyRange = framerange
 
             for Frame in range(framerange + 1):
-                Scene.frame_set(Frame)
+                print("_GenerateBoneKeys - Pose constraint Frame Loop", Frame)
+                Scene.frame_set(int(Frame))
 
                 if PoseBone.parent:
                     PoseMatrix = PoseBone.parent.matrix.inverted() @ PoseBone.matrix
@@ -1604,36 +1612,42 @@ class BoneAnimationGenerator(AnimationGenerator):
                 Rotation.conjugate()
                 Position = PoseMatrix.to_translation() - Translation_base
 
-                BoneAnimation.RotationKeys[Frame] = Rotation
-                BoneAnimation.PositionKeys[Frame] = Position
+                BoneAnimation.RotationKeys[int(Frame)] = Rotation
+                BoneAnimation.PositionKeys[int(Frame)] = Position
         elif (Armature.animation_data is not None):   # added to catch error
-            for fcu in Armature.animation_data.action.fcurves:
-                try:
-                    if Bone.name != fcu.data_path.split('"')[1]:
+            if Armature.animation_data.action is not None:
+                print("_GenerateBoneKeys - Armature.animation_data.action.fcurves")
+                for fcu in Armature.animation_data.action.fcurves:
+                    try:
+                        if Bone.name != fcu.data_path.split('"')[1]:
+                            continue
+                    except IndexError:
                         continue
-                except IndexError:
-                    continue
-                else:
-                    KeyType = fcu.data_path.split('"')[2][2:]
+                    else:
+                        KeyType = fcu.data_path.split('"')[2][2:]
 
-                    if KeyType not in ['rotation_quaternion', 'location']:
-                        continue
+                        if KeyType not in ['rotation_quaternion', 'location']:
+                            continue
 
-                    for KeyFrame in fcu.keyframe_points:
-                        Frame = KeyFrame.co[0]
-                        if Frame not in BoneAnimation.RotationKeys.keys():
-                            Scene.frame_set(Frame)
-                            Rotation = PoseBone.matrix_basis.to_quaternion()
-                            Rotation.conjugate()
-                            Position = PoseBone.matrix_basis.to_translation()
-                            Position = Matrix_base.to_3x3() @ Position
+                        for KeyFrame in fcu.keyframe_points:
+                            Frame = KeyFrame.co[0]
+                            if Frame not in BoneAnimation.RotationKeys.keys():
+                                print("_GenerateBoneKeys - Frame", Frame)
+                                Scene.frame_set(int(Frame))
+                                Rotation = PoseBone.matrix_basis.to_quaternion()
+                                Rotation.conjugate()
+                                Position = PoseBone.matrix_basis.to_translation()
+                                Position = Matrix_base.to_3x3() @ Position
 
-                            BoneAnimation.RotationKeys[Frame] = Rotation
-                            BoneAnimation.PositionKeys[Frame] = Position
+                                BoneAnimation.RotationKeys[Frame] = Rotation
+                                BoneAnimation.PositionKeys[Frame] = Position
 
-                if fcu.range()[1] > BoneAnimation.KeyRange:
-                    BoneAnimation.KeyRange = fcu.range()[1]
-
+                    if fcu.range()[1] > BoneAnimation.KeyRange:
+                        BoneAnimation.KeyRange = fcu.range()[1]
+            else:
+                print("BoneAnimationGenerator - skipped Armature Bones Keys no action", Armature, Armature.animation_data)
+        else:
+            print("BoneAnimationGenerator - skipped Armature Bones Keys no data", Armature, Armature.animation_data)
         if BoneAnimation.KeyRange > 0:
             self.Animations.append(BoneAnimation)
         Scene.frame_set(BlenderCurrentFrame)

@@ -763,16 +763,16 @@ class Environment():
     bpy.types.Scene.fsx_bool_overrideRadius = bpy.props.BoolProperty(name="Override radius?", default=False, description="Define a radius for the model")
 
     # Object Properties
-    bpy.types.Object.fsx_anim_tag = bpy.props.StringProperty(name="", default="")
+    bpy.types.Object.fsx_anim_tag = bpy.props.StringProperty(name="Obj Anim Tag", default="")
     bpy.types.Object.fsx_anim_length = bpy.props.StringProperty(name="Length", default="0")
     bpy.types.Object.fsx_xml = bpy.props.StringProperty(name="XML", default="")
-    bpy.types.Object.p3d_anim_tag = bpy.props.StringProperty(name="", default="")  # Added for Ronh Code kp
+    bpy.types.Object.p3d_anim_tag = bpy.props.StringProperty(name="Obj Anim Tag", default="")  # Added for Ronh Code kp
     bpy.types.Object.p3d_anim_length = bpy.props.StringProperty(name="Length", default="0")  # Added for Ronh Code kp
     bpy.types.Object.p3d_xml = bpy.props.StringProperty(name="XML", default="")  # Added for Ronh Code kp
 
     # Bone Properties
-    bpy.types.Bone.fsx_anim_tag = bpy.props.StringProperty(name="", default="")
-    bpy.types.Bone.fsx_anim_length = bpy.props.StringProperty(name="Length", default="0")
+    bpy.types.Bone.fsx_anim_tag = bpy.props.StringProperty(name="Bone Anim Tag", default="")
+    bpy.types.Bone.fsx_anim_length = bpy.props.StringProperty(name="Bone Anim Length", default="0")
 
     # Material definitions
     Material.fsxm_material_mode = bpy.props.EnumProperty(items=(('PBR', "PBR Material", ""), ('FSX', "Specular Material", ""), ('NONE', "Disabled", ""), ),

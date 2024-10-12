@@ -111,8 +111,9 @@ class FSXExporter:
             elif Object.type == 'ARMATURE':
                 self.log.log("object found: %s [ARMATURE]" % Object.name, True)
                 ExportMap[Object] = ArmatureExportObject(self.config, self, Object)
-                if self.config.ExportSkinWeights and Object.select_get():
+                if self.config.ExportSkinWeights:
                     for Bone in Object.data.bones:
+                        self.log.log("object found: %s [BONE]" % Bone.name, True)
                         ExportMap[Bone] = BoneExportObject(self.config, self, Bone, Object)
         Util.Update_Progress("Progress Objects: ", 1)
         self.log.log("All top-level objects from scene gathered.", False, True)
@@ -173,12 +174,13 @@ class FSXExporter:
 
             # remove objects that are not selected
             for ob in NoExportList:
+                self.log.log("object removed: %s [%s]" % (ob.name, type(ob)), False, True)
                 ExportMap.pop(ob)
 
             del RootList
             del NoExportList
 
-        # exclude all armatures from export
+        # exclude all armatures from export - bones are kept
         ArmList = []
         for ob in ExportMap.values():
             if ob.type == 'ARMATURE':
@@ -191,8 +193,10 @@ class FSXExporter:
                         ExportMap[child].Parent = ExportMap[arm.parent]
                         ExportMap[arm.parent].Children.append(ExportMap[child])
                     else:
-                        ExportMap[child].Parent = None
+                        if ExportMap[child].Parent:
+                            ExportMap[child].Parent = None
         for arm in ArmList:
+            self.log.log("object removed: %s {ARMATURE]" % arm.name, False, True)
             ExportMap.pop(arm)
 
         # list root level objects to be exported
