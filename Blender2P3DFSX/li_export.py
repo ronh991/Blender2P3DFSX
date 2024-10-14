@@ -1428,10 +1428,16 @@ class GenericAnimationGenerator(AnimationGenerator):
         try:
             FCurves = BlenderObject.animation_data.action.fcurves
         except AttributeError:
+            print("_GenerateKeys - Error no action fcurevs", BlenderObject.fsx_anim_tag)
             pass
+
+
+        # TODO: should check for NLATracks too? maybe aleady does
+
 
         # if there is a constraint applied to the object, we need to capture every frame
         if BlenderObject.constraints or not BlenderObject.animation_data:
+            print("_GenerateKeys - animation tag", BlenderObject.fsx_anim_tag)
             modeldefRoot = self.modeldefTree.getroot()
             animtag = modeldefRoot.find(".Animation[@name='%s']" % (BlenderObject.fsx_anim_tag))
             # if defined, get framerange from modeldef (for most animations)
@@ -1458,6 +1464,7 @@ class GenericAnimationGenerator(AnimationGenerator):
 
         # if there are no constraints applied to the object, just collect the keyframes
         elif FCurves is not None:
+            print("_GenerateKeys - FCurves only", BlenderObject.fsx_anim_tag)
             for fcu in FCurves:
                 KeyType = fcu.data_path
                 # check correct type and that we don't already have keyframes of that type
@@ -1482,6 +1489,7 @@ class GenericAnimationGenerator(AnimationGenerator):
 
 # Creates an Animation object for the ArmatureExportObject it gets passed and
 # an Animation object for each bone in the armature (if options allow)
+# looks like this function is never called -  no other references in the py files.
 class ArmatureAnimationGenerator(GenericAnimationGenerator):
     def __init__(self, config, SafeName, ArmatureExportObject, modeldefTree):
         GenericAnimationGenerator.__init__(self, config, SafeName,
@@ -1586,7 +1594,7 @@ class BoneAnimationGenerator(AnimationGenerator):
         Translation_base = Matrix_base.to_translation()
 
         if PoseBone.constraints:
-            print("_GenerateBoneKeys - PoseBone.Constraints")
+            print("_GenerateBoneKeys - PoseBone.Constraints", PoseBone.constraints)
             root = self.modeldefTree.getroot()
             animtag = root.find(".Animation[@name='%s']" % (Bone.fsx_anim_tag))
             try:
@@ -1599,6 +1607,7 @@ class BoneAnimationGenerator(AnimationGenerator):
                             framerange = int(fcu.range()[1])
             BoneAnimation.KeyRange = framerange
 
+            print("_GenerateBoneKeys PoseBone", PoseBone)
             for Frame in range(framerange + 1):
                 print("_GenerateBoneKeys - Pose constraint Frame Loop", Frame)
                 Scene.frame_set(int(Frame))
@@ -1612,8 +1621,8 @@ class BoneAnimationGenerator(AnimationGenerator):
                 Rotation.conjugate()
                 Position = PoseMatrix.to_translation() - Translation_base
 
-                BoneAnimation.RotationKeys[int(Frame)] = Rotation
-                BoneAnimation.PositionKeys[int(Frame)] = Position
+                BoneAnimation.RotationKeys[Frame] = Rotation
+                BoneAnimation.PositionKeys[Frame] = Position
         elif (Armature.animation_data is not None):   # added to catch error
             if Armature.animation_data.action is not None:
                 print("_GenerateBoneKeys - Armature.animation_data.action.fcurves")
@@ -1629,6 +1638,7 @@ class BoneAnimationGenerator(AnimationGenerator):
                         if KeyType not in ['rotation_quaternion', 'location']:
                             continue
 
+                        print("_GenerateBoneKeys - Bonename", Bone.name)
                         for KeyFrame in fcu.keyframe_points:
                             Frame = KeyFrame.co[0]
                             if Frame not in BoneAnimation.RotationKeys.keys():
@@ -1645,7 +1655,40 @@ class BoneAnimationGenerator(AnimationGenerator):
                     if fcu.range()[1] > BoneAnimation.KeyRange:
                         BoneAnimation.KeyRange = fcu.range()[1]
             else:
-                print("BoneAnimationGenerator - skipped Armature Bones Keys no action", Armature, Armature.animation_data)
+                print("BoneAnimationGenerator - skipped Armature Bones Keys no action - check NLAs", Armature, Armature.animation_data, Armature.animation_data.nla_tracks )
+                for nlatrack in Armature.animation_data.nla_tracks:
+                    if not nlatrack.mute:
+                        print("BoneAnimationGenerator - NLATrack Name", nlatrack.name, nlatrack.strips)
+                        for strip in nlatrack.strips:
+                            print("BoneAnimationGenerator - NLATrack strip", strip.name)
+                            for fcu in strip.action.fcurves:
+                                try:
+                                    if Bone.name != fcu.data_path.split('"')[1]:
+                                        continue
+                                except IndexError:
+                                    continue
+                                else:
+                                    KeyType = fcu.data_path.split('"')[2][2:]
+
+                                    if KeyType not in ['rotation_quaternion', 'location']:
+                                        continue
+
+                                    print("_GenerateBoneKeys - Bonename", Bone.name)
+                                    for KeyFrame in fcu.keyframe_points:
+                                        Frame = KeyFrame.co[0]
+                                        if Frame not in BoneAnimation.RotationKeys.keys():
+                                            print("_GenerateBoneKeys - Frame NLATrack strip", Frame)
+                                            Scene.frame_set(int(Frame)) # int correct here
+                                            Rotation = PoseBone.matrix_basis.to_quaternion()
+                                            Rotation.conjugate()
+                                            Position = PoseBone.matrix_basis.to_translation()
+                                            Position = Matrix_base.to_3x3() @ Position
+
+                                            BoneAnimation.RotationKeys[Frame] = Rotation
+                                            BoneAnimation.PositionKeys[Frame] = Position
+
+                                if fcu.range()[1] > BoneAnimation.KeyRange:
+                                    BoneAnimation.KeyRange = fcu.range()[1]
         else:
             print("BoneAnimationGenerator - skipped Armature Bones Keys no data", Armature, Armature.animation_data)
         if BoneAnimation.KeyRange > 0:
