@@ -71,16 +71,19 @@ class FSXBoneProps(bpy.types.Panel):
     bl_idname = "BONE_PT_fsx_props"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
-    bl_context = 'bone'
+    bl_context = "bone"
 
     def draw(self, context):
         layout = self.layout
         box = layout.box()
-        box.label(text="Animation Tag:", icon='ANIM')
-        row = box.row()
-        row.prop(bpy.context.active_bone, "fsx_anim_tag", text="Anim tag")
-        row.prop(bpy.context.active_bone, "fsx_anim_length", text="Anim length")
-        box.operator("fsx.anim_clear")
+        if bpy.context.mode != "POSE":
+            box.label(text="Animation tags are stored in individual bones - pose mode.", icon='ANIM')
+        else:
+            box.label(text="Animation Tag:", icon='ANIM')
+            row = box.row()
+            row.prop(bpy.context.active_bone, "fsx_anim_tag", text="Anim tag")
+            row.prop(bpy.context.active_bone, "fsx_anim_length", text="Anim length")
+            box.operator("fsx.anim_clear")
 
 
 class FSXObjectProps(bpy.types.Panel):
