@@ -154,8 +154,8 @@ class Environment():
             mat.fsxm_detailscale = mat.fsxm_detailscale
             mat.fsxm_bumpscale = mat.fsxm_bumpscale
 
-            mat.fsxm_precip1 = mat.fsxm_precip1
-            mat.fsxm_precip2 = mat.fsxm_precip2
+            mat.fsxm_precipuseprecipitation = mat.fsxm_precipuseprecipitation
+            mat.fsxm_precipapplyoffset = mat.fsxm_precipapplyoffset
             mat.fsxm_precipoffs = mat.fsxm_precipoffs
 
             mat.fsxm_blddif = mat.fsxm_blddif
@@ -234,7 +234,7 @@ class Environment():
 
             mat.fsxm_allowbloom = False
             mat.fsxm_emissivebloom = False
-            mat.fsxm_ambientlightscale = 0.5
+            mat.fsxm_ambientlightscale = 1.0
             mat.fsxm_bloommaterialcopy = False
             mat.fsxm_bloommaterialmodulatingalpha = False
             mat.fsxm_nospecbloom = False
@@ -258,7 +258,7 @@ class Environment():
 
             mat.fsxm_zbias = 0
 
-            mat.fsxm_falphamult = 1.0
+            mat.fsxm_falphamult = 255.0
             mat.fsxm_falpha = False
 
             mat.fsxm_srcblend = 'One'
@@ -271,8 +271,8 @@ class Environment():
             mat.fsxm_detailscale = 1.0
             mat.fsxm_bumpscale = 1.0
 
-            mat.fsxm_precip1 = False
-            mat.fsxm_precip2 = False
+            mat.fsxm_precipuseprecipitation = False
+            mat.fsxm_precipapplyoffset = False
             mat.fsxm_precipoffs = 0.0
 
             mat.fsxm_blddif = False
@@ -340,6 +340,8 @@ class Environment():
             MaterialUtil.MakeMasked(mat)
         elif mat.fsxm_rendermode == 'Translucent':
             MaterialUtil.MakeTranslucent(mat)
+        elif mat.fsxm_rendermode == 'Additive':
+            MaterialUtil.MakeAdditive(mat)
 
     def toggle_zbias(self, context):
         mat = context.active_object.active_material
@@ -373,21 +375,21 @@ class Environment():
         except:
             pass
 
-    def setMetallicScale(self, context):
-        mat = context.active_object.active_material
-        try:
-            if mat.fsxm_material_mode == 'PBR':
-                mat.node_tree.nodes["Metallic Scale"].inputs["Value"].default_value[0] = mat.fsxm_metallic_scale
-        except:
-            pass
+    # def setMetallicScale(self, context):
+        # mat = context.active_object.active_material
+        # try:
+            # if mat.fsxm_material_mode == 'PBR':
+                # mat.node_tree.nodes["Metallic Scale"].inputs["Value"].default_value[0] = mat.fsxm_metallic_scale
+        # except:
+            # pass
 
-    def setSmoothnessScale(self, context):
-        mat = context.active_object.active_material
-        try:
-            if mat.fsxm_material_mode == 'PBR':
-                mat.node_tree.nodes["Smoothness Scale"].inputs["Value"].default_value[0] = mat.fsxm_smoothness_scale
-        except:
-            pass
+    # def setSmoothnessScale(self, context):
+        # mat = context.active_object.active_material
+        # try:
+            # if mat.fsxm_material_mode == 'PBR':
+                # mat.node_tree.nodes["Smoothness Scale"].inputs["Value"].default_value[0] = mat.fsxm_smoothness_scale
+        # except:
+            # pass
 
     def setPowerScale(self, context):
         mat = context.active_object.active_material
@@ -439,6 +441,7 @@ class Environment():
             return
         if mat.node_tree.nodes.get("Specular BSDF", None) is not None:
             mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value = mat.fsxm_EmissiveColor
+            mat.node_tree.nodes["Emissive Color"].outputs[0].default_value = mat.fsxm_EmissiveColor
 
     def setDiffuseColor(self, context):
         # Specular
@@ -456,13 +459,14 @@ class Environment():
         if mat.node_tree.nodes.get("Specular Color", None) is not None:
             mat.node_tree.nodes["Specular Color"].outputs[0].default_value = mat.fsxm_SpecularColor
 
-    # def setMetallicScale(self, context):
-        # mat = context.active_object.active_material
+    def setMetallicScale(self, context):
+        # PBR
+        mat = context.active_object.active_material
 
-        # if mat.node_tree.nodes.get("Metallic Factor", None) is not None:
-            # mat.node_tree.nodes["Metallic Factor"].outputs[0].default_value = mat.fsxm_metallic_scale
+        if mat.node_tree.nodes.get("Metallic Factor", None) is not None:
+            mat.node_tree.nodes["Metallic Factor"].outputs[0].default_value = mat.fsxm_metallic_scale
 
-    def setSmoothnessScale(self, context):
+    def setSmoothnessFactor(self, context):
         mat = context.active_object.active_material
 
         if mat.node_tree.nodes.get("Smoothness Factor", None) is not None:
@@ -666,18 +670,20 @@ class Environment():
         if mat.node_tree.nodes.get("Emissive", None) is not None:
             mat.node_tree.nodes["Emissive"].image = mat.fsxm_emissivetexture
             if mat.fsxm_emissivetexture is None:
-                for l in nodes["Emissive"].outputs["Color"].links:
-                    print("Emissive links", nodes["Emissive"].outputs["Color"].links, l)
-                    if mat.fsxm_material_mode == 'FSX':
-                        if l.to_socket == nodes["Specular BSDF"].inputs["Emissive Color"]:
-                            links.remove(l)
-                    if mat.fsxm_material_mode == 'PBR':
-                        if l.to_socket == nodes["Principled BSDF"].inputs["Emission"]:
-                            links.remove(l)
+                if nodes["Emissive"].outputs["Color"].links is not None:
+                    for l in nodes["Emissive"].outputs["Color"].links:
+                        print("Emissive links", nodes["Emissive"].outputs["Color"].links, l)
+                        if mat.fsxm_material_mode == 'FSX':
+                            if l.to_socket == nodes["Specular Color Blend"].inputs["Color2"]:
+                                links.remove(l)
+
+                        if mat.fsxm_material_mode == 'PBR':
+                            if l.to_socket == nodes["Principled BSDF"].inputs["Emission"]:
+                                links.remove(l)
             elif mat.fsxm_emissivetexture is not None:
                 mat.node_tree.nodes["Emissive"].texture_mapping.scale[1] = scale
                 if mat.fsxm_material_mode == 'FSX':
-                    links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Specular BSDF"].inputs["Emissive Color"])
+                    links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Emissive Color Blend"].inputs["Color2"])
                 if mat.fsxm_material_mode == 'PBR':
                     links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Principled BSDF"].inputs["Emission"])
 
@@ -763,16 +769,16 @@ class Environment():
     bpy.types.Scene.fsx_bool_overrideRadius = bpy.props.BoolProperty(name="Override radius?", default=False, description="Define a radius for the model")
 
     # Object Properties
-    bpy.types.Object.fsx_anim_tag = bpy.props.StringProperty(name="Obj Anim Tag", default="")
+    bpy.types.Object.fsx_anim_tag = bpy.props.StringProperty(name="FSX Animation", default="")
     bpy.types.Object.fsx_anim_length = bpy.props.StringProperty(name="Length", default="0")
     bpy.types.Object.fsx_xml = bpy.props.StringProperty(name="XML", default="")
-    bpy.types.Object.p3d_anim_tag = bpy.props.StringProperty(name="Obj Anim Tag", default="")  # Added for Ronh Code kp
+    bpy.types.Object.p3d_anim_tag = bpy.props.StringProperty(name="P3D Animation", default="")  # Added for Ronh Code kp
     bpy.types.Object.p3d_anim_length = bpy.props.StringProperty(name="Length", default="0")  # Added for Ronh Code kp
     bpy.types.Object.p3d_xml = bpy.props.StringProperty(name="XML", default="")  # Added for Ronh Code kp
 
     # Bone Properties
-    bpy.types.Bone.fsx_anim_tag = bpy.props.StringProperty(name="Bone Anim Tag", default="")
-    bpy.types.Bone.fsx_anim_length = bpy.props.StringProperty(name="Bone Anim Length", default="0")
+    bpy.types.Bone.fsx_anim_tag = bpy.props.StringProperty(name="FSX Bone Anim", default="")
+    bpy.types.Bone.fsx_anim_length = bpy.props.StringProperty(name="Length", default="0")
 
     # Material definitions
     Material.fsxm_material_mode = bpy.props.EnumProperty(items=(('PBR', "PBR Material", ""), ('FSX', "Specular Material", ""), ('NONE', "Disabled", ""), ),
@@ -780,11 +786,11 @@ class Environment():
 
     blendtypes = [(a, a, "") for a in ['Zero', 'One', 'SrcColor', 'InvSrcColor', 'SrcAlpha', 'InvSrcAlpha',
                                        'DestAlpha', 'InvDestAlpha', 'DestColor', 'InvDestColor']]
+    # per SDK - 4 then same 4 with 'UserControlled'
     emissivetypes = [(a, a, "") for a in ['AdditiveNightOnly', 'Blend', 'MultiplyBlend', 'Additive',
-                                          'AdditiveNightOnlyUserControlled', 'BlendUserControlled',
-                                          'AdditiveUserControlled']]
+                                          'AdditiveNightOnlyUserControlled', 'BlendUserControlled','MultiplyBlendUserControlled','AdditiveUserControlled']]
     emissivetypes_pbr = [(a, a, "") for a in ['AdditiveNightOnly', 'Additive']]
-    rendermode = [(a, a, "") for a in ['Opaque', 'Masked', 'Translucent']]
+    rendermode = [(a, a, "") for a in ['Opaque', 'Masked', 'Translucent', 'Additive']]
     metallicsource = [(a, a, "") for a in ['MetallicAlpha', 'AlbedoAlpha']]
     ztesttypes = [(a, a, "") for a in ['Never', 'Less', 'Equal', 'LessEqual', 'Greater', 'NotEqual', 'GreaterEqual', 'Always']]
 
@@ -799,7 +805,7 @@ class Environment():
     Material.fsxm_SpecularColor = FloatVectorProperty(name="SpecularColor", subtype="COLOR", size=4, min=0.0, max=1.0, default=(1.0, 1.0, 1.0, 1.0), update=setSpecularColor)
     Material.fsxm_EmissiveColor = FloatVectorProperty(name="EmissiveColor", subtype="COLOR", size=4, min=0.0, max=1.0, default=(0.0, 0.0, 0.0, 1.0), update=setEmissiveColor)
     Material.fsxm_metallic_scale = FloatProperty(name="Metallic_scale", default=0, min=0, max=1.0, update=setMetallicScale)
-    Material.fsxm_smoothness_scale = FloatProperty(name="Smoothness_scale", default=1, min=0, max=1.0, update=setSmoothnessScale)
+    Material.fsxm_smoothness_scale = FloatProperty(name="Smoothness_scale", default=1, min=0, max=1.0, update=setSmoothnessFactor)
     Material.fsxm_power_scale = FloatProperty(name="Specular Level (Power scale)", default=1, min=0, max=100, update=setPowerScale)
 
     # Textures
@@ -826,9 +832,12 @@ class Environment():
     Material.fsxm_ztestmode = EnumProperty(name="Alpha test function", default='Never', items=ztesttypes)
     Material.fsxm_ztestlevel = FloatProperty(name="Alpha test level", default=0.0, min=0.0, max=255)
 
+    Material.fsxm_falphamult = FloatProperty(name="Final alpha multiply", default=255.0, min=0.0, max=255.0)
+    Material.fsxm_falpha = BoolProperty(name="Set final alpha value at render time", default=False)
+
     Material.fsxm_allowbloom = BoolProperty(name="Allow bloom", default=False)
     Material.fsxm_emissivebloom = BoolProperty(name="Allow emissive bloom", default=False)
-    Material.fsxm_ambientlightscale = FloatProperty(name="Ambient light scale", default=0.5, min=0.0, max=1.0)
+    Material.fsxm_ambientlightscale = FloatProperty(name="Ambient light scale", default=1.0, min=0.0, max=1.0)
     Material.fsxm_bloommaterialcopy = BoolProperty(name="Bloom material by copying", default=False)
     Material.fsxm_bloommaterialmodulatingalpha = BoolProperty(name="Bloom material modulating by alpha", default=False)
     Material.fsxm_nospecbloom = BoolProperty(name="No specular bloom", default=False)
@@ -852,21 +861,18 @@ class Environment():
 
     Material.fsxm_zbias = IntProperty(name="Z-Bias", default=0, min=-50, max=0, update=toggle_zbias)
 
-    Material.fsxm_falphamult = FloatProperty(name="Final alpha multiply", default=1.0, min=0.0, max=1.0)
-    Material.fsxm_falpha = BoolProperty(name="Set final alpha value at render time", default=False)
-
     Material.fsxm_srcblend = EnumProperty(name="Source Blend", default='One', items=blendtypes)
     Material.fsxm_destblend = EnumProperty(name="Dest Blend", default='Zero', items=blendtypes)
 
     Material.fsxm_fresdif = BoolProperty(name="Diffuse", default=False)
-    Material.fsxm_fresref = BoolProperty(name="Environment", default=False)
+    Material.fsxm_fresref = BoolProperty(name="Reflection", default=False)
     Material.fsxm_fresspec = BoolProperty(name="Specular", default=False)
 
     Material.fsxm_detailscale = FloatProperty(name="Detail scale", default=1, min=0, update=setDetailScale)
     Material.fsxm_bumpscale = FloatProperty(name="Bump scale", default=1, min=0, update=setBumpScale)
 
-    Material.fsxm_precip1 = BoolProperty(name="Take into account", default=False)
-    Material.fsxm_precip2 = BoolProperty(name="Apply offset to start", default=False)
+    Material.fsxm_precipuseprecipitation = BoolProperty(name="Take into account", default=False)
+    Material.fsxm_precipapplyoffset = BoolProperty(name="Apply offset to start", default=False)
     Material.fsxm_precipoffs = FloatProperty(name="Offset", min=0.0, max=1.0)
 
     Material.fsxm_blddif = BoolProperty(name="Blend diffuse by diffuse alpha", default=False)
@@ -875,8 +881,8 @@ class Environment():
     Material.fsxm_blespec = BoolProperty(name="Blend env by specular map alpha", default=False)
     Material.fsxm_refscale = FloatProperty(name="Reflection scale", default=0, min=0.0, max=100)    # 19/03/2023 changed name to Reflection scale to be the same as in 3DS and MCX  Dave_W
     Material.fsxm_specscale = IntProperty(name="Specular map power scale", default=64, min=0, max=255)
-    Material.fsxm_globenv = BoolProperty(name="Use global environment map", default=True)
     Material.fsxm_environmentmap = PointerProperty(type=Image, name="Custom environment map", update=switch_environmentmap)
+    Material.fsxm_globenv = BoolProperty(name="Use global environment map", default=False)
 
     # for PBR material. ON
     Material.fsxm_normal_scale_x = FloatProperty(name="X", default=1.0, update=setBumpScale)
@@ -900,7 +906,8 @@ class Environment():
     Material.fsxm_EmissiveTextureUVChannel = IntProperty(name="Emissive UV channel", default=1, min=1, max=2)
     Material.fsxm_MaskFinalAlphaBlendByDetailBlendMask = BoolProperty(name="Mask by detail blend mask", default=False)
     Material.fsxm_MaskDiffuseBlendsByDetailBlendMask = BoolProperty(name="Mask diffuse blends by detail blend mask", default=False)
-    Material.fsxm_MaterialScript = StringProperty(name="Script", subtype='FILE_PATH')
+    Material.fsxm_MaterialScript = StringProperty(name="Script", subtype='FILE_PATH', description="Path converted to Filename of script file")
+    #Material.fsxm_MaterialScript = PointerProperty(type=File, name="script file", description="Filename of script file")
     Material.fsxm_TemperatureScale = FloatProperty(name="Temperature scale", default=1.0, min=0.0, max=10.0)
     Material.fsxm_UseDetailAlphaAsBlendMask = BoolProperty(name="Use detail alpha as blend mask", default=False)
     Material.fsxm_UseEmissiveAlphaAsHeatMap = BoolProperty(name="Use emissive map as alpha heat map", default=False)

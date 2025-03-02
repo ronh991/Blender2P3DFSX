@@ -66,7 +66,7 @@ bl_info = {
     "author": "Various members of fsdeveloper.com",
     "description": "These tools were developed by members of the fsdeveloper.com community. Felix Owono-Ateba, Ron Haertel, Kris Pyatt (2017), Manochvarma Raman (2018), Otmar Nitsche (2020), David Hoeffgen (2020)",
     "blender": (3, 3, 0),
-    "version": (1, 0, 27),
+    "version": (1, 0, 35),
     "location": "View3D",
     "warning": "",
     "category": "3D View",

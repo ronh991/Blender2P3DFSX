@@ -82,6 +82,10 @@ class MaterialUtil():
     def MakeTranslucent(Material):
         Material.blend_method = 'BLEND'
         Material.use_backface_culling = True
+
+    def MakeAdditive(Material):
+        Material.blend_method = 'BLEND'
+        Material.use_backface_culling = True
         
     def CreateSpecShader(Material):
         # Deleted RemoveShaderNodes function to allow location control of spec_shader_node and output_node. 20-02-2023     Dave_W
@@ -149,6 +153,8 @@ class MaterialUtil():
         spec_shader_node.inputs["Clear Coat"].hide = True   # hide Clear Coat sockets not used for specular workflow Dave_W
         spec_shader_node.inputs["Clear Coat Roughness"].hide = True
         spec_shader_node.inputs["Clear Coat Normal"].hide = True
+        # set to 1.0 inverse of alpha = 0.0 - seems diffuse color alpha should not be used to set alpha - only when we have a texture - NOPE setting to 1 makes all black render.
+        # spec_shader_node.inputs["Transparency"].default_value = 1.0
 
         # Create the base color Diffuse texture
         base_color_texture_node = CreateNewNode(Material, 'ShaderNodeTexImage', "Diffuse", location=(-1000, 640))
@@ -163,15 +169,20 @@ class MaterialUtil():
         diffuse_color_blend_node.inputs["Fac"].default_value = 1.0
         diffuse_color_blend_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
         math_node = CreateAlpha(Material)
-        specular_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Specular Color", location=(-475, -240))
-        specular_color_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Specular Color Blend", location=(-25, -300))
+        specular_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Specular Color", location=(-475, -140))
+        specular_color_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Specular Color Blend", location=(-275, -20))
         specular_color_blend_node.blend_type = 'MULTIPLY'
         specular_color_blend_node.inputs["Fac"].default_value = 1.0
         specular_color_blend_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
+        emissive_color_node = CreateNewNode(Material, 'ShaderNodeRGB', "Emissive Color", location=(-475, -460))
+        emissive_color_blend_node = CreateNewNode(Material, 'ShaderNodeMixRGB', "Emissive Color Blend", location=(-275, -460))
+        emissive_color_blend_node.blend_type = 'MULTIPLY'
+        emissive_color_blend_node.inputs["Fac"].default_value = 1.0
+        emissive_color_blend_node.inputs["Color2"].default_value = (1.0, 1.0, 1.0, 1.0)
 
         # ToDo: Specular - Specular Level nodes needed - specular factor or Power???  (Glossiness and Soften is not used???)
         # Specular nodes
-        power_node = CreateNewNode(Material, 'ShaderNodeValue', "Power Factor", location=(-250, -150))
+        power_node = CreateNewNode(Material, 'ShaderNodeValue', "Power Factor", location=(-470, -50))
 
         # create the detail maps nodes:
         detail_scale_node = CreateNewNode(Material, 'ShaderNodeMapping', 'Detail Scale', location=(-1250, 300))
@@ -234,7 +245,8 @@ class MaterialUtil():
 
         #move to update
         #links.new(detail_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
-        links.new(math_node.outputs["Value"], spec_shader_node.inputs["Transparency"])
+        # remove this - causes wrong color in render grey should be black issue
+        #links.new(math_node.outputs["Value"], spec_shader_node.inputs["Transparency"])
 
         links.new(diffuse_color_node.outputs["Color"], diffuse_color_blend_node.inputs["Color1"])
         links.new(diffuse_color_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
@@ -250,6 +262,10 @@ class MaterialUtil():
         links.new(specular_color_blend_node.outputs["Color"], spec_shader_node.inputs["Specular"])
         links.new(specular_color_node.outputs["Color"], specular_color_blend_node.inputs["Color1"])
         links.new(power_node.outputs["Value"], specular_color_blend_node.inputs["Fac"])
+
+        links.new(emissive_color_blend_node.outputs["Color"], spec_shader_node.inputs["Emissive Color"])
+        links.new(emissive_color_node.outputs["Color"], emissive_color_blend_node.inputs["Color1"])
+
 
         links.new(texture_normal_map_node.outputs["Color"], sep_rgb_node.inputs["Image"])
         links.new(texture_normal_map_node.outputs["Alpha"], com_rgb_node.inputs["R"])
@@ -377,7 +393,7 @@ class MaterialUtil():
         smoothness_factor_node = CreateNewNode(Material, 'ShaderNodeValue', "Smoothness Factor", location=(-850, -440))
         smoothness_math_node = CreateNewNode(Material, 'ShaderNodeMath', "Invert 1 minus", location=(-550, -210))
         smoothness_math_node.operation = 'SUBTRACT'
-        smoothness_math_node.inputs[1].default_value = 1.0
+        smoothness_math_node.inputs[0].default_value = 1.0
         smoothness_math_node.use_clamp = True
 
         # put metallic nodes in frame:        Dave_W

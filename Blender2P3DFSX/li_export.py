@@ -59,6 +59,7 @@
 #####################################################################################
 
 import bpy
+
 from pathlib import Path
 from mathutils import Vector, Matrix, Quaternion
 from . func_util import Util
@@ -205,10 +206,12 @@ class MeshExportObject(ExportObject):
             Mesh = ob_eval.to_mesh()
 
         # process virtual cockpit textures
+        # process nNumber texture ??? - missing
         vctextures = []
 
         for index, mat in enumerate(Mesh.materials):
             if mat is not None:
+                #if mat.fsxm_vcpaneltex or mat.fsxm_nnumbertex:
                 if mat.fsxm_vcpaneltex:
                     vctextures.append(index)
 
@@ -476,12 +479,14 @@ class MeshExportObject(ExportObject):
     def __WriteMeshUVCoordinates2(self, Mesh):
         if not Mesh.uv_layers or len(Mesh.uv_layers) <= 1:
             return
+        print("__WriteMeshUVCoordinates2 - found")
 
         self.Exporter.File.Write("MeshTextureCoords2 {{ // {} UV coordinates, channel 2\n"
                                  .format(self.SafeName))
         self.Exporter.File.Indent()
 
         UVCoordinates = Mesh.uv_layers[1].data
+        print("__WriteMeshUVCoordinates2 - data", UVCoordinates)
 
         VertexCount = 0
         for Polygon in Mesh.polygons:
@@ -505,7 +510,7 @@ class MeshExportObject(ExportObject):
                     self.Exporter.File.Write(",\n", Indent=False)
 
         self.Exporter.File.Unindent()
-        self.Exporter.File.Write("}} // End of {} UV coordinates\n".format(
+        self.Exporter.File.Write("}} // End of {} UV 2 coordinates\n".format(
             self.SafeName))
 
     ###########################################################################
@@ -666,6 +671,7 @@ class MeshExportObject(ExportObject):
                     clearcoat_texture=None,
                     clearcoat_value=0,
                     clearcoat_smoothness=1,
+                    # missing NNumber
                     #precipitation_texture=None,
                 )
 
@@ -733,22 +739,31 @@ class MeshExportObject(ExportObject):
                         # get the texture:
                         if Material.fsxm_diffusetexture is not None:
                             data["diffuse_texture"] = Util.ReplaceFileNameExt(Material.fsxm_diffusetexture.name, bmpMat)
-                        #if data["diffuse_texture"] is None:
-                        #    data["diffuse_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Base Color'), "diffuse", "diffuse/albedo", Material)
-
-                        # check if the texture is a vcockpit gauge:
+                        if data["diffuse_texture"] is None:
+                            data["diffuse_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Base Color'), "diffuse", "diffuse/albedo", Material)
+                            if data["diffuse_texture"] is not None:
+                                print("AnalyzeMaterial - diffuse texture is none - found", data["diffuse_texture"])
+                         
+                        # check if texture is n number
                         if Material.fsxm_vcpaneltex is True:
                             if data["diffuse_texture"]:
                                 data["diffuse_texture"] = Path(data["diffuse_texture"]).stem
+
+                        # check if the texture is a vcockpit gauge
+                        #if Material.fsxm_nnumbertex is True:
+                        #    if data["diffuse_texture"]:
+                        #        data["diffuse_texture"] = Path(data["diffuse_texture"]).stem
 
                     # 2. Normal map
                         if Material.fsxm_bumptexture is not None:
                             data["normal_texture"] = Util.ReplaceFileNameExt(Material.fsxm_bumptexture.name, bmpMat)
                         data["normal_scale"] = Material.fsxm_normal_scale_x
-                        # if data["normal_texture"] is None:
-                            # normal_map_node = Material.node_tree.nodes.get('Normal Map')
-                            # if normal_map_node is not None:
-                                # data["normal_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Normal'), "normal", "normal", Material)
+                        if data["normal_texture"] is None:
+                            normal_map_node = Material.node_tree.nodes.get('Normal Map')
+                            if normal_map_node is not None:
+                                data["normal_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Normal'), "normal", "normal", Material)
+                                if data["normal_texture"] is not None:
+                                    print("AnalyzeMaterial - normal texture is none - found", data["normal_texture"])
 
                     # 3. Reflection map
                         if Material.fsxm_environmentmap is not None:
@@ -757,8 +772,11 @@ class MeshExportObject(ExportObject):
                     # 4. Detail map
                         if Material.fsxm_detailtexture is not None:
                             data["detail_texture"] = Util.ReplaceFileNameExt(Material.fsxm_detailtexture.name, bmpMat)
+                        # this will put the diffuse texture into the detailtexture xml - bug
                         # if data["detail_texture"] is None:
                             # data["detail_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Base Color'), "Detail", "Detail", Material)
+                            # if data["detail_texture"] is not None:
+                                   # print("AnalyzeMaterial - detail texture is none - found", data["detail_texture"])
 
                     # 5. Fresnel map
                         if Material.fsxm_fresnelramp is not None:
@@ -773,8 +791,10 @@ class MeshExportObject(ExportObject):
                             # get the texture:
                             if Material.fsxm_speculartexture is not None:
                                 data["specular_texture"] = Util.ReplaceFileNameExt(Material.fsxm_speculartexture.name, bmpMat)
-                            # if data["specular_texture"] is None:
-                                # data["specular_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Specular'), "specular", "specular", Material)
+                            if data["specular_texture"] is None:
+                                data["specular_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Specular'), "specular", "specular", Material)
+                                if data["specular_texture"] is not None:
+                                    print("AnalyzeMaterial - specular texture is none - found", data["specular_texture"])
 
                         # 6.b Emissive color
                             # need an emissive color node also
@@ -785,10 +805,12 @@ class MeshExportObject(ExportObject):
                             # get the texture:
                             if Material.fsxm_emissivetexture is not None:
                                 data["emissive_texture"] = Util.ReplaceFileNameExt(Material.fsxm_emissivetexture.name, bmpMat)
-                            # if data["emissive_texture"] is None:
-                                # data["emissive_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Emissive Color'), "emissive", "emissive", Material)
+                            if data["emissive_texture"] is None:
+                                data["emissive_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Emissive Color'), "emissive", "emissive", Material)
+                                if data["emissive_texture"] is not None:
+                                    print("AnalyzeMaterial - emissive texture is none - found", data["emissive_texture"])
 
-                            # check if the texture is a vcockpit gauge:
+                            # check if the texture is a vcockpit gauge
                             if Material.fsxm_vcpaneltex is True:
                                 if data["emissive_texture"]:
                                     data["emissive_texture"] = Path(data["emissive_texture"]).stem
@@ -811,10 +833,12 @@ class MeshExportObject(ExportObject):
                         # 7.b Clearcoat/smoothness map
                             if Material.fsxm_clearcoattexture is not None:
                                 data["clearcoat_texture"] = Util.ReplaceFileNameExt(Material.fsxm_clearcoattexture.name, bmpMat)
-                            # if data["clearcoat_texture"] is None:
-                                # data["clearcoat_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Clearcoat'), "clearcoat", "clearcoat", Material)
-                                # data["clearcoat_value"] = bsdf_node.inputs.get('Clearcoat').default_value
-                                # data["clearcoat_smoothness"] = 1 - bsdf_node.inputs.get('Clearcoat Roughness').default_value
+                            if data["clearcoat_texture"] is None:
+                                data["clearcoat_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Clearcoat'), "clearcoat", "clearcoat", Material)
+                                data["clearcoat_value"] = bsdf_node.inputs.get('Clearcoat').default_value
+                                data["clearcoat_smoothness"] = 1 - bsdf_node.inputs.get('Clearcoat Roughness').default_value
+                                if data["clearcoat_texture"] is not None:
+                                    print("AnalyzeMaterial - clearcoat texture is none - found", data["clearcoat_texture"])
 
                         # ToDo: v6 Precipitation map
 
@@ -858,12 +882,15 @@ class MeshExportObject(ExportObject):
                 Exporter.File.Write("%i;            // Blend env by invdifalpha\n" % (Material.fsxm_bledif))
                 Exporter.File.Write("%i;            // Blend env by specalpha\n" % (Material.fsxm_blespec))
                 Exporter.File.Write("%i; %i; %i;      // Fresnel affects dif - spec - env\n" % (Material.fsxm_fresdif, Material.fsxm_fresspec, Material.fsxm_fresref))
-                Exporter.File.Write("%i; %i; " % (Material.fsxm_precip1, Material.fsxm_precip2))
+                Exporter.File.Write("%i; %i; " % (Material.fsxm_precipuseprecipitation, Material.fsxm_precipapplyoffset))
                 Exporter.File.Write("{:9f};  // Precipitation...\n" .format(Material.fsxm_precipoffs), Indent=False)
                 Exporter.File.Write("{:9f};     // Specular Map Power Scale\n" .format(Material.fsxm_specscale))
                 Exporter.File.Write("\"{}\"; \"{}\";  // Src/Dest blend\n" .format(Material.fsxm_srcblend, Material.fsxm_destblend))
                 Exporter.File.Write("BlendDiffuseByBaseAlpha { %i; }\n" % Material.fsxm_blddif)
                 Exporter.File.Write("BlendDiffuseByInverseSpecularMapAlpha { %i; }\n" % Material.fsxm_bldspec)
+                Exporter.File.Write("NNumberTexture {\n")
+                Exporter.File.Write("    %i;    // Material is an N-Number\n" % (Material.fsxm_nnumbertex))
+                Exporter.File.Write("}\n")
                 Exporter.File.Write("AllowBloom { %i; }\n" % Material.fsxm_allowbloom)
                 Exporter.File.Write("EmissiveBloom {\n")
                 Exporter.File.Write("    %i;    // Allow emissive bloom\n" % (Material.fsxm_emissivebloom))
@@ -945,9 +972,12 @@ class MeshExportObject(ExportObject):
                 Exporter.File.Write("   %i;\n" % (Material.fsxm_EmissiveTextureUVChannel))
                 Exporter.File.Write("}\n")
 
-                if (((Exporter.context.scene.global_sdk == 'fsx') or (Exporter.context.scene.global_sdk == 'p3dv1')) and Material.fsxm_MaterialScript != ""):
+                print("export fsxm_script", Exporter.context.scene.global_sdk )
+                if (((Exporter.context.scene.global_sdk == 'fsx') or (Exporter.context.scene.global_sdk == 'p3dv5') or (Exporter.context.scene.global_sdk == 'p3dv6')) and Material.fsxm_MaterialScript != ""):
+                    print("fsxm_script - has script file", Material.fsxm_MaterialScript, Path(Material.fsxm_MaterialScript).name)
                     Exporter.File.Write("MaterialScript {\n")
-                    Exporter.File.Write("    \"{}\"; // MaterialScript\n" .format(Material.fsxm_MaterialScript))
+                    fsxm_MaterialScript_filename = Path(Material.fsxm_MaterialScript).name
+                    Exporter.File.Write("    \"{}\"; // MaterialScript\n" .format(fsxm_MaterialScript_filename))
                     Exporter.File.Write("}\n")
 
                 Exporter.File.Write("TemperatureScale {\n")
@@ -961,7 +991,7 @@ class MeshExportObject(ExportObject):
                 Exporter.File.Write("    {:9f}; // Detail Offset U\n" .format(Material.fsxm_DetailOffsetU))
                 Exporter.File.Write("    {:9f}; // Detail Offset V\n" .format(Material.fsxm_DetailOffsetV))
                 Exporter.File.Write("    {:9f}; // Detail Rotation\n" .format(Material.fsxm_DetailRotation))
-                Exporter.File.Write("    {:9f}; // Detail Scale V\n" .format(Material.fsxm_DetailScaleV))
+                Exporter.File.Write("    {:9f}; // Detail Scale V\n" .format(Material.fsxm_DetailScaleV)) # strange that 3DS calls this DetailScaleU
                 Exporter.File.Write("    \"{}\"; // Detail Blend Mode\n" .format(Material.fsxm_DetailBlendMode))
                 Exporter.File.Write("    {:9f}; // Detail Blend Weight\n" .format(Material.fsxm_DetailBlendWeight))
                 Exporter.File.Write("    %i; // Use Detail Alpha As Blend Mask\n" % (Material.fsxm_UseDetailAlphaAsBlendMask))
@@ -1056,7 +1086,9 @@ class MeshExportObject(ExportObject):
 
                 if Material.fsxm_MaterialScript != "":
                     Exporter.File.Write("MaterialScript {\n")
-                    Exporter.File.Write("    \"{}\"; // MaterialScript\n" .format(Material.fsxm_MaterialScript))
+                    fsxm_MaterialScript_filename = Path(Material.fsxm_MaterialScript).name
+                    Exporter.File.Write("    \"{}\"; // MaterialScript\n" .format(fsxm_MaterialScript_filename))
+                    #Exporter.File.Write("    \"{}\"; // MaterialScript\n" .format(Material.fsxm_MaterialScript))
                     Exporter.File.Write("}\n")
 
                 Exporter.File.Unindent()
@@ -1414,7 +1446,7 @@ class GenericAnimationGenerator(AnimationGenerator):
         # only gather keyframes from tagged objects
         if (not self.ExportObject.BlenderObject.fsx_anim_tag):
             return
-
+        print("_GenerateKeys fsx_anim_tag", self.ExportObject.BlenderObject.fsx_anim_tag)
         Scene = bpy.context.scene  # Convenience alias
         BlenderCurrentFrame = Scene.frame_current
         Scene.frame_set(0)
@@ -1428,7 +1460,7 @@ class GenericAnimationGenerator(AnimationGenerator):
         try:
             FCurves = BlenderObject.animation_data.action.fcurves
         except AttributeError:
-            print("_GenerateKeys - Error no action fcurevs", BlenderObject.fsx_anim_tag)
+            print("_GenerateKeys - Error no action fcurves", BlenderObject.fsx_anim_tag)
             pass
 
 

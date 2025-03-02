@@ -163,9 +163,6 @@ class FSXMaterial(bpy.types.Panel):
                     subbox.label(text="Diffuse:")
                 subbox.template_ID(mat, "fsxm_diffusetexture", new="image.new", open="image.open")
 
-                subbox.label(text="Detail:")
-                subbox.template_ID(mat, "fsxm_detailtexture", new="image.new", open="image.open")
-
                 if mat.fsxm_material_mode == 'PBR':
                     subbox.label(text="Metallic:")
                     subbox.template_ID(mat, "fsxm_metallictexture", new="image.new", open="image.open")
@@ -173,11 +170,15 @@ class FSXMaterial(bpy.types.Panel):
                     subbox.label(text="Specular:")
                     subbox.template_ID(mat, "fsxm_speculartexture", new="image.new", open="image.open")
 
-                subbox.label(text="Emissive:")
+                subbox.label(text="Emissive/Self Illumination:")
                 subbox.template_ID(mat, "fsxm_emissivetexture", new="image.new", open="image.open")
 
-                subbox.label(text="Normal:")
+                subbox.label(text="Normal/Bump:")
                 subbox.template_ID(mat, "fsxm_bumptexture", new="image.new", open="image.open")
+
+                if mat.fsxm_material_mode == 'PBR':
+                    subbox.label(text="Detail:")
+                    subbox.template_ID(mat, "fsxm_detailtexture", new="image.new", open="image.open")
 
                 if ((mat.fsxm_material_mode == 'PBR' and context.scene.global_sdk == 'p3dv5') or (mat.fsxm_material_mode == 'PBR' and context.scene.global_sdk == 'p3dv6')):             # Dave_W
                     subbox.label(text="Clearcoat:")
@@ -239,10 +240,12 @@ class FSXMaterial(bpy.types.Panel):
                 subbox = box.box()
                 subbox.label(text="Script Properties", icon='SCRIPT')
                 subbox.prop(mat, 'fsxm_MaterialScript')
+                #subbox.template_ID(mat, "fsxm_MaterialScript", open="file.open")
 
                 subbox = box.box()
                 subbox.label(text="Enhanced Parameters", icon='ORIENTATION_GIMBAL')
                 subbox.prop(mat, 'fsxm_assumevertical')
+                subbox.prop(mat, 'fsxm_noshadow')
                 subbox.prop(mat, 'fsxm_pverts')
                 subbox.prop(mat, 'fsxm_doublesided')
                 subbox.prop(mat, 'fsxm_decalorder')
@@ -257,6 +260,11 @@ class FSXMaterial(bpy.types.Panel):
                 subbox.prop(mat, 'fsxm_ztest')
                 subbox.prop(mat, 'fsxm_ztestmode')
                 subbox.prop(mat, 'fsxm_ztestlevel')
+
+                subbox = box.box()
+                subbox.label(text="Final Alpha Blend", icon='IMAGE_ALPHA')
+                subbox.prop(mat, 'fsxm_falphamult')
+                subbox.prop(mat, 'fsxm_falpha')
 
                 subbox = box.box()
                 subbox.label(text="Bloom", icon='LIGHT_SUN')
@@ -276,6 +284,7 @@ class FSXMaterial(bpy.types.Panel):
                     subbox = box.box()
                     subbox.label(text="Script Properties", icon='SCRIPT')
                     subbox.prop(mat, 'fsxm_MaterialScript')
+                    #subbox.template_ID(mat, "fsxm_MaterialScript", open="file.open")
 
                 subbox = box.box()
                 subbox.label(text="Enhanced Parameters", icon='ORIENTATION_GIMBAL')
@@ -293,11 +302,6 @@ class FSXMaterial(bpy.types.Panel):
                 subbox.prop(mat, 'fsxm_skinned')
                 subbox.prop(mat, 'fsxm_zwrite')
                 subbox.prop(mat, 'fsxm_vshadow')
-
-                subbox = box.box()
-                subbox.label(text="Final Alpha Blend", icon='IMAGE_ALPHA')
-                subbox.prop(mat, 'fsxm_falphamult')
-                subbox.prop(mat, 'fsxm_falpha')
 
                 subbox = box.box()
                 subbox.label(text="Framebuffer Blend", icon='GP_MULTIFRAME_EDITING')
@@ -325,7 +329,11 @@ class FSXMaterial(bpy.types.Panel):
                     subbox.prop(mat, 'fsxm_DetailTextureUVChannel')
 
                 subbox = box.box()
-                subbox.label(text="Other Texture Info", icon='TEXTURE_DATA')
+                subbox.label(text="Detail Texture Info", icon='TEXTURE_DATA')
+
+                subbox.label(text="Detail:")
+                subbox.template_ID(mat, "fsxm_detailtexture", new="image.new", open="image.open")
+
                 subbox.prop(mat, 'fsxm_detailscale')
                 subbox.prop(mat, 'fsxm_bumpscale')
 
@@ -335,17 +343,24 @@ class FSXMaterial(bpy.types.Panel):
                     subbox.prop(mat, 'fsxm_DetailColor')
                     subbox.prop(mat, 'fsxm_DetailOffsetU')
                     subbox.prop(mat, 'fsxm_DetailOffsetV')
+                    #subbox.prop(mat, 'fsxm_DetailScaleU') # only a V - assume scale U is same
+                    subbox.prop(mat, 'fsxm_DetailScaleV')
                     subbox.prop(mat, 'fsxm_DetailRotation')
-                    subbox.prop(mat, 'fsxm_TemperatureScale')
                     subbox.prop(mat, 'fsxm_MaskFinalAlphaBlendByDetailBlendMask')
                     subbox.prop(mat, 'fsxm_MaskDiffuseBlendsByDetailBlendMask')
                     subbox.prop(mat, 'fsxm_UseDetailAlphaAsBlendMask')
-                    subbox.prop(mat, 'fsxm_UseEmissiveAlphaAsHeatMap')
 
                 subbox = box.box()
+                subbox.label(text="Other Special Texture Info", icon='TEXTURE_DATA')
+
+                if ((context.scene.global_sdk == 'p3dv4') or (context.scene.global_sdk == 'p3dv5') or (context.scene.global_sdk == 'p3dv6')):
+                    subbox.prop(mat, 'fsxm_TemperatureScale')
+                    subbox.prop(mat, 'fsxm_UseEmissiveAlphaAsHeatMap')
+                    
+                subbox = box.box()
                 subbox.label(text="Precipitation", icon='MOD_FLUIDSIM')
-                subbox.prop(mat, 'fsxm_precip1')
-                subbox.prop(mat, 'fsxm_precip2')
+                subbox.prop(mat, 'fsxm_precipuseprecipitation')
+                subbox.prop(mat, 'fsxm_precipapplyoffset')
                 subbox.prop(mat, 'fsxm_precipoffs')
 
                 subbox = box.box()
@@ -355,7 +370,7 @@ class FSXMaterial(bpy.types.Panel):
                 subbox.prop(mat, 'fsxm_bledif')
                 subbox.prop(mat, 'fsxm_blespec')
                 subbox.prop(mat, 'fsxm_globenv')
-                subbox.label(text="Custom environment map:")
+                subbox.label(text="Custom environment (Reflection) map:")
                 subbox.template_ID(mat, "fsxm_environmentmap", new="image.new", open="image.open")
                 subbox.prop(mat, 'fsxm_refscale')
                 subbox.prop(mat, 'fsxm_specscale')

@@ -104,8 +104,8 @@ class FSXObjectProps(bpy.types.Panel):
             box.label(text="Animation Tag", icon='ANIM')
             subbox = box.box()
             row = subbox.row()
-            row.prop(bpy.context.active_object, "fsx_anim_tag", text="Anim tag")
-            row.prop(bpy.context.active_object, "fsx_anim_length", text="Anim length")
+            row.prop(bpy.context.active_object, "fsx_anim_tag", text="tag")
+            row.prop(bpy.context.active_object, "fsx_anim_length", text="length")
             subbox.row().separator()
             subbox.operator('fsx.anim_clear', icon='TRASH')
 

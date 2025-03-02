@@ -1194,6 +1194,7 @@ class AnimationWriter:
         # Write each animation of each generator
         for anim in self.Exporter.AnimList:
             element = sourceroot.find(".Animation[@name='%s']" % (anim))
+            self.Exporter.log.log(" Start writing Animation data for %s" % anim, False, False)
             anim_tag = etree.SubElement(root, "Anim", element.attrib)
 
             for Generator in self.AnimationGenerators:
