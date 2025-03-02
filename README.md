@@ -1,5 +1,5 @@
 # Blender2P3DFSX
-Blender 3.3 to FSX and P3D v 1.0.20
+Blender 3.3 to FSX and P3D v 1.0.35
 
 Highly experimental update to Add 
 
@@ -19,8 +19,6 @@ Emissive color also.
 
 NOTE - Shader node behave like the MSFS exporter - do not modify anything directly in the shader workspace or on the Surface panel.
 All things are updated when you add/delete textures.  Links are generated.
-
-ClearCoat is not setup in this version yet.
 
 PBR
 
