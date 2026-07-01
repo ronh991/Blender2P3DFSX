@@ -1,5 +1,5 @@
 # Blender2P3DFSX
-Blender 3.3 to FSX and P3D v 1.0.35
+Blender 3.3 update to 3.6,4.2 and 4.5 to FSX and P3D v 1.0.36
 
 Highly experimental update to Add 
 
