@@ -831,14 +831,42 @@ class MeshExportObject(ExportObject):
                             #print("metallic", metallic_node, smoothness_node)
 
                         # 7.b Clearcoat/smoothness map
+
+                            # changes to input names for BSDF node - Ronh
+                            if bpy.app.version < (4, 2, 0):
+                                emission = "Emission"
+                                subsurfaceColor = "Subsurface Color"
+                                clearcoat = "Clearcoat"
+                                clearcoatRoughness = "Clearcoat Roughness"
+                                clearcoatnormal = "Clearcoat Normal"
+                            else:
+                                emission = "Emission Color"
+                                clearcoat = "Coat Tint"
+                                clearcoatRoughness = "Coat Roughness"
+                                clearcoatnormal = "Coat Normal"
                             if Material.fsxm_clearcoattexture is not None:
                                 data["clearcoat_texture"] = Util.ReplaceFileNameExt(Material.fsxm_clearcoattexture.name, bmpMat)
                             if data["clearcoat_texture"] is None:
-                                data["clearcoat_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', 'Clearcoat'), "clearcoat", "clearcoat", Material)
-                                data["clearcoat_value"] = bsdf_node.inputs.get('Clearcoat').default_value
-                                data["clearcoat_smoothness"] = 1 - bsdf_node.inputs.get('Clearcoat Roughness').default_value
+                                data["clearcoat_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', clearcoat), "clearcoat", "clearcoat", Material)
+                                data["clearcoat_value"] = bsdf_node.inputs.get(clearcoat).default_value
+                                data["clearcoat_smoothness"] = 1 - bsdf_node.inputs.get(clearcoatRoughness).default_value
                                 if data["clearcoat_texture"] is not None:
                                     print("AnalyzeMaterial - clearcoat texture is none - found", data["clearcoat_texture"])
+
+                        # 7.c Emissive color
+                            # get the specular color:
+                            data["emissive_color"] = (bsdf_node.inputs.get(emission).default_value[0], bsdf_node.inputs.get(emission).default_value[1], bsdf_node.inputs.get(emission).default_value[2])
+
+                            # get the texture:
+                            if Material.fsxm_emissivetexture is not None:
+                                data["emissive_texture"] = Util.ReplaceFileNameExt(Material.fsxm_emissivetexture.name, bmpMat)
+                            if data["emissive_texture"] is None:
+                                data["emissive_texture"] = getTextureFromNodes(findTextureNodes(bsdf_node, 'TEX_IMAGE', emission), "emissive", "emissive", Material)
+
+                            # check if the texture is a vcockpit gauge:
+                            if Material.fsxm_vcpaneltex is True:
+                                if data["emissive_texture"]:
+                                    data["emissive_texture"] = Path(data["emissive_texture"]).stem
 
                         # ToDo: v6 Precipitation map
 

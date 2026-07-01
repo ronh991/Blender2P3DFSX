@@ -336,6 +336,19 @@ class MaterialUtil():
 
             return value_node
 
+        # changes to input names for BSDF node - Ronh
+        if bpy.app.version < (4, 2, 0):
+            emission = "Emission"
+            subsurfaceColor = "Subsurface Color"
+            clearcoat = "Clearcoat"
+            clearcoatRoughness = "Clearcoat Roughness"
+            clearcoatnormal = "Clearcoat Normal"
+        else:
+            emission = "Emission Color"
+            clearcoat = "Coat Tint"
+            clearcoatRoughness = "Coat Roughness"
+            clearcoatnormal = "Coat Normal"
+
         nodes = Material.node_tree.nodes
         links = Material.node_tree.links
 
@@ -502,9 +515,9 @@ class MaterialUtil():
 
         # clearcoat             Dave_W
         # ToDo: add to clearcoat update
-        #links.new(sep_color_node.outputs["Red"], bsdf_node.inputs["Clearcoat"])
-        #links.new(cc_node_smoothness.outputs["Color"], bsdf_node.inputs["Clearcoat Roughness"])
-        #links.new(cc_normal_map_node.outputs["Normal"], bsdf_node.inputs["Clearcoat Normal"])
+        #links.new(sep_color_node.outputs["Red"], bsdf_node.inputs[clearcoat])
+        #links.new(cc_node_smoothness.outputs["Color"], bsdf_node.inputs[clearcoatRoughness])
+        #links.new(cc_normal_map_node.outputs["Normal"], bsdf_node.inputs[clearcoatnormal])
         #keep
         links.new(texture_clear_coat_node.outputs["Color"], sep_color_node.inputs["Color"])
         links.new(sep_color_node.outputs["Green"], cc_node_smoothness.inputs["Color"])
