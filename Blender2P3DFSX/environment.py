@@ -512,6 +512,9 @@ class Environment():
                         print("Transparency links", nodes["Transparency"].outputs["Color"].links, l)
                         if l.to_socket == nodes["Specular BSDF"].inputs["Transparency"]:
                             links.remove(l)
+                else:
+                    # add in the 1 minus alpha nodes
+                    links.new(nodes["One Minus Alpha"].outputs["Value"], nodes["Specular BSDF"].inputs["Transparency"])
 
         if mat.fsxm_diffusetexture is not None and mat.fsxm_detailtexture is None:
             mat.node_tree.nodes["Detail"].image = mat.fsxm_detailtexture

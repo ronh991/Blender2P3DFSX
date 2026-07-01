@@ -199,7 +199,7 @@ class MaterialUtil():
         detail_blend_node.blend_type = 'OVERLAY'
         detail_blend_node.inputs["Fac"].default_value = 0
 
-        # transparency
+        # transparency for diffuse texture
         inv_alpha_node = CreateNewNode(Material, 'ShaderNodeInvert', "Transparency", location=(-500, 200))
 
         # specular color texture
@@ -246,7 +246,7 @@ class MaterialUtil():
         #move to update
         #links.new(detail_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
         # remove this - causes wrong color in render grey should be black issue
-        #links.new(math_node.outputs["Value"], spec_shader_node.inputs["Transparency"])
+        links.new(math_node.outputs["Value"], spec_shader_node.inputs["Transparency"])
 
         links.new(diffuse_color_node.outputs["Color"], diffuse_color_blend_node.inputs["Color1"])
         links.new(diffuse_color_blend_node.outputs["Color"], spec_shader_node.inputs["Base Color"])
