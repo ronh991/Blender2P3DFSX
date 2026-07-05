@@ -154,7 +154,7 @@ class Util:
         # normalize progress to something out of 20
         length = 20  # modify this to change the length
         block = int(round(length * progress))
-        msg = "\r{0}: [{1}] {2}%".format(job_title, "#"*block + "-"*(length-block), round(progress*100, 2))
+        msg = "\r{0}: [{1}] {2}%".format(job_title + ":" + datetime.now().strftime("%m/%d/%Y %H:%M:%S"), "#"*block + "-"*(length-block), round(progress*100, 2)) + "\r\n"
         if progress >= 1:
             msg += " DONE " + datetime.now().strftime("%m/%d/%Y %H:%M:%S") + "\r\n"
         sys.stdout.write(msg)

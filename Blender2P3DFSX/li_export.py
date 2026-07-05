@@ -298,7 +298,7 @@ class MeshExportObject(ExportObject):
     def __WriteMesh(self, Mesh):
         self.Exporter.log.log(" * Writing vertices...", True, True)
 
-        self.Exporter.File.Write("\nMesh {{ // {} mesh".format(self.SafeName))
+        self.Exporter.File.Write("Mesh {{ // {} mesh\n".format(self.SafeName))
         self.Exporter.File.Indent()
 
         # Create the mesh enumerator based on options
