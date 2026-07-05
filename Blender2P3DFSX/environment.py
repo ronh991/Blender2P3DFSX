@@ -434,10 +434,15 @@ class Environment():
             mat.node_tree.nodes["Alpha Value"].outputs[0].default_value = mat.fsxm_BaseColor[3]
         
     def setEmissiveColor(self, context):
+        # changes to input names for BSDF node - Ronh
+        if bpy.app.version < (4, 2, 0):
+            emission = "Emission"
+        else:
+            emission = "Emission Color"
         mat = context.active_object.active_material
 
         if mat.node_tree.nodes.get("Principled BSDF", None) is not None:
-            mat.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value = mat.fsxm_EmissiveColor
+            mat.node_tree.nodes["Principled BSDF"].inputs[emission].default_value = mat.fsxm_EmissiveColor
             return
         if mat.node_tree.nodes.get("Specular BSDF", None) is not None:
             mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value = mat.fsxm_EmissiveColor
@@ -659,6 +664,12 @@ class Environment():
                 mat.node_tree.nodes["Detail Blend"].inputs["Fac"].default_value = 1
 
     def matchemissive(self, context):
+        # changes to input names for BSDF node - Ronh
+        if bpy.app.version < (4, 2, 0):
+            emission = "Emission"
+        else:
+            emission = "Emission Color"
+
         mat = context.active_object.active_material
         print("MatchEmissive", mat.fsxm_material_mode)
         if mat.fsxm_material_mode == 'NONE':
@@ -681,14 +692,14 @@ class Environment():
                                 links.remove(l)
 
                         if mat.fsxm_material_mode == 'PBR':
-                            if l.to_socket == nodes["Principled BSDF"].inputs["Emission"]:
+                            if l.to_socket == nodes["Principled BSDF"].inputs[emission]:
                                 links.remove(l)
             elif mat.fsxm_emissivetexture is not None:
                 mat.node_tree.nodes["Emissive"].texture_mapping.scale[1] = scale
                 if mat.fsxm_material_mode == 'FSX':
                     links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Emissive Color Blend"].inputs["Color2"])
                 if mat.fsxm_material_mode == 'PBR':
-                    links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Principled BSDF"].inputs["Emission"])
+                    links.new(mat.node_tree.nodes["Emissive"].outputs["Color"], nodes["Principled BSDF"].inputs[emission])
 
     # copied and edited from matchmetallic       Dave_W
     def matchclearcoat(self, context):
